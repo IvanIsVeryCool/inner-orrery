@@ -228,6 +228,24 @@ button.tag { font: inherit; font-size: 11px; line-height: 1; background: none; c
 .about .lede b { color: var(--ink); font-weight: 600; }
 h4 { font-size: 12.5px; font-weight: 600; margin: 0 0 10px; color: var(--ink); letter-spacing: .01em; }
 .muted { color: var(--faint); }
+.chart { position: relative; }
+.chart-sub { margin: -4px 0 10px; font-size: 13px; line-height: 1.5; color: var(--dim); }
+.legend-row { display: flex; gap: 16px; margin: 0 0 6px; font-size: 12.5px; color: var(--dim); }
+.legend-row i { display: inline-block; width: 8px; height: 8px; margin-right: 7px; border-radius: 50%; background: var(--c); }
+.chart svg { display: block; width: 100%; height: auto; overflow: visible; }
+.chart svg text { fill: var(--faint); font: 10.5px var(--f-mono); }
+.chart .g { stroke: var(--line); stroke-width: 1; }
+.chart .m line { stroke: rgba(233,230,223,.28); stroke-width: 2; stroke-linecap: round; }
+.chart .m circle { stroke: var(--sheet); stroke-width: 2; }
+.chart .m .hit { fill: transparent; cursor: pointer; }
+.chart .m.on line { stroke: rgba(233,230,223,.75); }
+.ctip { position: absolute; z-index: 2; transform: translate(-50%, -100%); padding: 6px 9px; background: var(--surface); border: 1px solid var(--line-2); border-radius: 4px; font-size: 12px; line-height: 1.45; white-space: nowrap; pointer-events: none; }
+.ctip span { color: var(--dim); }
+.ctable summary { margin-top: 10px; font-size: 12.5px; color: var(--dim); cursor: pointer; }
+.ctable table { width: 100%; margin-top: 8px; border-collapse: collapse; font-size: 12.5px; }
+.ctable th { font-weight: 500; color: var(--dim); text-align: left; }
+.ctable th, .ctable td { padding: 6px 4px; border-top: 1px solid var(--line); }
+.ctable .n { text-align: right; font-family: var(--f-mono); font-variant-numeric: tabular-nums; }
 .today { margin: 8px 0 0; font-size: 12.5px; color: var(--dim); }
 .today .linkbtn { color: var(--accent); }
 .rempty { position: absolute; z-index: 3; left: 50%; top: 66%; transform: translateX(-50%); width: min(380px, calc(100% - 48px)); display: grid; justify-items: center; gap: 14px; text-align: center; }
@@ -237,7 +255,7 @@ h4 { font-size: 12.5px; font-weight: 600; margin: 0 0 10px; color: var(--ink); l
 .why b { color: var(--ink); font-weight: 500; }
 .insights { display: grid; gap: 0; margin: 0; padding: 0; list-style: none; }
 .insights li { padding: 11px 0; border-top: 1px solid var(--line); line-height: 1.55; color: var(--ink); font-size: 14px; }
-.insights li:last-child { border-bottom: 1px solid var(--line); }
+.insights li:first-child { border-top: 0; padding-top: 2px; }
 .backup { display: flex; flex-wrap: wrap; align-items: baseline; gap: 6px 12px; padding: 12px 14px; border: 1px solid rgba(255,143,94,.35); border-radius: var(--r); font-size: 13px; color: var(--dim); }
 .backup b { color: var(--ink); font-weight: 500; }
 .toast .linkbtn { margin-left: 12px; color: var(--accent); }
@@ -2589,6 +2607,55 @@ void main(){
     return out.slice(0, 3);
   }
 
+  // dumbbell chart: each entry's intensity before and after what you did
+  const C_BEFORE = '#d95926', C_AFTER = '#3987e5';
+  let chartPts = [];
+  function intensityChart() {
+    const pts = entries.filter((e) => e.intensity != null && e.after != null && e.createdAt).sort((a, b) => a.createdAt - b.createdAt);
+    chartPts = pts;
+    if (pts.length < 2) return '';
+    const W = 372, H = 176, L = 28, R = 12, T = 10, B = 26;
+    const t0 = pts[0].createdAt, t1 = pts[pts.length - 1].createdAt, span = Math.max(1, t1 - t0);
+    const X = (t) => L + ((t - t0) / span) * (W - L - R);
+    const Y = (v) => T + (1 - clamp(+v, 0, 10) / 10) * (H - T - B);
+    const fmtS = new Intl.DateTimeFormat(undefined, { month: 'short', day: 'numeric' });
+    let g = '';
+    for (const v of [0, 5, 10]) g += `<line class="g" x1="${L}" x2="${W - R}" y1="${Y(v)}" y2="${Y(v)}"/><text x="${L - 8}" y="${Y(v) + 4}" text-anchor="end">${v}</text>`;
+    g += `<text x="${L}" y="${H - 6}">${esc(fmtS.format(t0))}</text><text x="${W - R}" y="${H - 6}" text-anchor="end">${esc(fmtS.format(t1))}</text>`;
+    let m = '';
+    pts.forEach((e, i) => {
+      const x = X(e.createdAt), yb = Y(e.intensity), ya = Y(e.after);
+      m += `<g class="m" data-i="${i}"><rect class="hit" x="${x - 9}" y="${T}" width="18" height="${H - T - B}"/><line x1="${x}" x2="${x}" y1="${yb}" y2="${ya}"/><circle cx="${x}" cy="${ya}" r="4" style="fill:${C_AFTER}"/><circle cx="${x}" cy="${yb}" r="4" style="fill:${C_BEFORE}"/></g>`;
+    });
+    const drops = pts.map((e) => e.intensity - e.after);
+    const avg = drops.reduce((a, b) => a + b, 0) / drops.length;
+    const rows = pts.slice().reverse().map((e) => `<tr><td>${esc(fmtS.format(e.createdAt))}</td><td>${esc(e.label || 'Unnamed')}</td><td class="n">${esc(e.intensity)}</td><td class="n">${esc(e.after)}</td></tr>`).join('');
+    return `<div class="chart" id="ichart">
+      <h4>Intensity, before and after</h4>
+      <p class="chart-sub">Each line is one entry: how strong it was, and how strong after what you did. On average it dropped ${avg.toFixed(1)} points.</p>
+      <div class="legend-row"><span><i style="--c:${C_BEFORE}"></i>Before</span><span><i style="--c:${C_AFTER}"></i>After</span></div>
+      <svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Intensity before and after for ${pts.length} entries; average drop ${avg.toFixed(1)} points">${g}${m}</svg>
+      <div class="ctip" hidden></div>
+      <details class="ctable"><summary>Show as table</summary><table><thead><tr><th>Date</th><th>Feeling</th><th class="n">Before</th><th class="n">After</th></tr></thead><tbody>${rows}</tbody></table></details>
+    </div>`;
+  }
+  function wireChart() {
+    const c = $('#ichart'); if (!c) return;
+    const svg = c.querySelector('svg'), tip = c.querySelector('.ctip');
+    let on = null;
+    const clear = () => { if (on) on.classList.remove('on'); on = null; tip.hidden = true; };
+    svg.addEventListener('pointermove', (ev) => {
+      const gm = ev.target.closest('.m'); if (!gm) { clear(); return; }
+      if (on !== gm) { clear(); on = gm; gm.classList.add('on'); }
+      const e = chartPts[+gm.dataset.i]; if (!e) return;
+      tip.innerHTML = `<b>${esc(e.label || 'Unnamed')}</b> <span>${esc(fmtDay.format(e.createdAt))}</span><br>${esc(e.intensity)} → ${esc(e.after)}`;
+      const r = c.getBoundingClientRect(), x = clamp(ev.clientX - r.left, 70, r.width - 70);
+      tip.style.left = x + 'px'; tip.style.top = (ev.clientY - r.top - 12) + 'px'; tip.hidden = false;
+    });
+    svg.addEventListener('pointerleave', clear);
+    svg.addEventListener('click', (ev) => { const gm = ev.target.closest('.m'); if (gm && chartPts[+gm.dataset.i]) select(chartPts[+gm.dataset.i].id); });
+  }
+
   function renderPatterns() {
     const el = $('#viewPatterns');
     const n = entries.length;
@@ -2600,7 +2667,9 @@ void main(){
     const lead = Object.entries(sum).sort((a, b) => b[1] - a[1])[0][0];
     const tips = insights();
     let html = tips.length ? `<div><h4>What your sky is saying</h4><ul class="insights">${tips.map((t) => `<li>${t}</li>`).join('')}</ul></div>` : '';
-    html += `<div class="${tips.length ? 'block' : ''}"><h4>Bead balance</h4><p class="lede" style="margin-bottom:10px">Across ${n} ${n === 1 ? 'entry' : 'entries'}, <b style="color:var(--ink)">${BEAD_NAME[lead]}</b> carried the most weight.</p><div class="bars">
+    const ch = intensityChart();
+    if (ch) html += `<div class="${html ? 'block' : ''}">${ch}</div>`;
+    html += `<div class="${html ? 'block' : ''}"><h4>Bead balance</h4><p class="lede" style="margin-bottom:10px">Across ${n} ${n === 1 ? 'entry' : 'entries'}, <b style="color:var(--ink)">${BEAD_NAME[lead]}</b> carried the most weight.</p><div class="bars">
       ${['body', 'cognition', 'emotion'].map((k) => barRow(BEAD_NAME[k], sum[k], tot, Math.round((sum[k] / tot) * 100) + '%', rgb(BEAD[k]))).join('')}</div></div>`;
     // regions
     html += `<div class="block"><h4>Where your entries live</h4><p>Each region is one quarter of the circumplex: pleasant or unpleasant, intense or calm.</p><div class="bars">${PLACES.map((k) => { const c = entries.filter((e) => regionOf(e) === k).length; return barRow(REGIONS[k].name, c, n, String(c), rgb(REGIONS[k].color)); }).join('')}</div></div>`;
@@ -2654,6 +2723,7 @@ void main(){
     } else html += `<p>Three or more linked entries form a constellation. Keep logging and they'll start to line up.</p>`;
     html += `</div>`;
     el.innerHTML = html;
+    wireChart();
   }
 
 
