@@ -11,7 +11,7 @@ Every feeling you log becomes a star orbiting a black hole. Its color is its mix
 - **The seven parameters.** Each log walks through label, bodily signature, trigger, context, history and baseline, failure mode, and regulation.
 - **Patterns.** Bead balance, misread rate, how baseline affects misreads, which regulation strategies lowered intensity, and recurring signatures.
 - **Replay, Capture, Export and Import.**
-- **A hidden track.** Find the faint star in the top-right corner.
+- **Play song.** The button in the top-right corner plays a track made for this project, and the sky pulses with its beat.
 
 ## Privacy
 
