@@ -638,7 +638,7 @@ dl.params.keys > div { grid-template-columns: 84px 1fr; }
         </div>
         <div><h3 class="sec">Settings</h3>
           <dl class="params settings">
-            <div><dt>Visual quality</dt><dd><div class="jseg" role="group" aria-label="Visual quality"><button type="button" data-set="quality" data-val="auto">Auto</button><button type="button" data-set="quality" data-val="high">High</button><button type="button" data-set="quality" data-val="balanced">Balanced</button><button type="button" data-set="quality" data-val="low">Low</button></div><p class="hintline">Auto lowers the resolution when your device needs it. Low suits older laptops and phones.</p></dd></div>
+            <div><dt>Visual quality</dt><dd><div class="jseg" role="group" aria-label="Visual quality"><button type="button" data-set="quality" data-val="auto">Auto</button><button type="button" data-set="quality" data-val="high">High</button><button type="button" data-set="quality" data-val="balanced">Balanced</button><button type="button" data-set="quality" data-val="low">Low</button><button type="button" data-set="quality" data-val="flat">Flat</button></div><p class="hintline">Auto lowers the resolution when your device needs it. Low suits older laptops and phones. Flat turns off the 3D sky entirely.</p></dd></div>
             <div><dt>Motion</dt><dd><div class="jseg" role="group" aria-label="Motion"><button type="button" data-set="motion" data-val="system">Match device</button><button type="button" data-set="motion" data-val="full">Full</button><button type="button" data-set="motion" data-val="reduced">Reduced</button></div><p class="hintline">Reduced slows the orbits and turns off flicker and the opening camera move.</p></dd></div>
             <div><dt>Shortcut keys</dt><dd><div class="jseg" role="group" aria-label="Shortcut keys"><button type="button" data-set="keys" data-val="on">On</button><button type="button" data-set="keys" data-val="off">Off</button></div><p class="hintline">1–4, M, + and − move around the sky. Turn them off if they get in the way of a screen reader.</p></dd></div>
             <div><dt>Sound</dt><dd><div class="jseg" role="group" aria-label="Sound"><button type="button" data-set="sound" data-val="on">On</button><button type="button" data-set="sound" data-val="off">Off</button></div><p class="hintline">A quiet score that changes with each region, and soft sounds when you explore. It starts after your first click.</p></dd></div>
@@ -1604,7 +1604,7 @@ void main(){
       gl.bindFramebuffer(gl.FRAMEBUFFER, null);
       return { tex, fb, w, h, ok };
     };
-    G = { gl, P, skyTex, starTex, starData: new Float32Array(128 * 2 * 4), target, useFloat, T: null, level: 2, emaMs: 16, frames: 0 };
+    G = { gl, P, skyTex, starTex, starData: new Float32Array(128 * 2 * 4), target, useFloat, T: null, level: 2, emaMs: 16, frames: 0, slow: 0 };
     sizeTargets();
     if (!G.T.scene.ok && G.useFloat) { G.useFloat = false; sizeTargets(); }
     if (!G.T.scene.ok) throw new Error('framebuffer incomplete');
@@ -2167,7 +2167,7 @@ void main(){
       const pw = new Float32Array(16);
       planetWorld().forEach((pp, i) => pw.set(pp, i * 4));
       const ns = fillStarData();
-      try { renderGL(pw, ns); } catch (err) { console.error(err); }
+      try { renderGL(pw, ns); glErrors = 0; } catch (err) { console.error(err); if (++glErrors > 3) { useFlat(); toast('The 3D sky hit a problem, so a simpler view is showing.'); } }
       adaptQuality(dtMs);
     }
     drawOverlay(ctx, now);
@@ -2182,6 +2182,8 @@ void main(){
     G.frames = 0;
     if (G.emaMs > 26 && G.level > 0) { G.level--; sizeTargets(); }
     else if (G.emaMs < 13 && G.level < LEVELS.length - 1) { G.level++; sizeTargets(); }
+    if (G.level === 0 && G.emaMs > 55) { if (++G.slow >= 3) { useFlat(); toast('This device was struggling with the 3D sky, so a lighter view is on. Change it in About → Settings.'); } }
+    else G.slow = 0;
   }
 
   function resize() {
@@ -2302,7 +2304,21 @@ void main(){
   let lastFocus = null;
   // ---------- Settings ----------
   function saveSettings() { try { localStorage.setItem(SETTINGS_KEY, JSON.stringify(settings)); } catch (_) {} }
+  let glErrors = 0, glCtxLost = false;
+  function useFlat() {
+    G = null; glCanvas.hidden = true; fx.classList.add('flat');
+    if (!fbBg || fbBg.width !== Math.round(W * dpr)) buildFallbackBg();
+  }
+  function useGL() {
+    if (G || glCtxLost) return true;
+    try { initGL(); glCanvas.hidden = false; fx.classList.remove('flat'); glErrors = 0; return true; }
+    catch (_) { useFlat(); return false; }
+  }
+  glCanvas.addEventListener('webglcontextlost', (ev) => { ev.preventDefault(); glCtxLost = true; useFlat(); toast('The 3D view paused. Showing a simpler sky until it recovers.'); });
+  glCanvas.addEventListener('webglcontextrestored', () => { glCtxLost = false; if (settings.quality !== 'flat' && useGL()) { applyQuality(); toast('The 3D view is back.'); } });
   function applyQuality() {
+    if (settings.quality === 'flat') { if (G) useFlat(); return; }
+    if (!G && !glPending && !useGL()) return;
     if (!G) return;
     const lv = { high: LEVELS.length - 1, balanced: 2, low: 0 }[settings.quality];
     if (lv != null && G.level !== lv) { G.level = lv; sizeTargets(); }
@@ -3324,10 +3340,10 @@ ${tips.length ? `<h2>What the sky is saying</h2><ul class="ins">${tips.map((t) =
   requestAnimationFrame((t) => { last = t; frame(t); });
   // build the GPU scene after the first paint so the page appears at once
   setTimeout(() => {
-    try { initGL(); }
-    catch (err) {
-      console.warn('WebGL2 unavailable, using the flat renderer.', err);
-      G = null; glCanvas.hidden = true; fx.classList.add('flat'); buildFallbackBg();
+    if (settings.quality === 'flat') useFlat();
+    else {
+      try { initGL(); }
+      catch (err) { console.warn('WebGL2 unavailable, using the flat renderer.', err); useFlat(); }
     }
     glPending = false; fade = reduceMotion ? 0.6 : 0;
     applyQuality();
