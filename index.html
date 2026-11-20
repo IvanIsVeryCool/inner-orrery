@@ -228,6 +228,17 @@ button.tag { font: inherit; font-size: 11px; line-height: 1; background: none; c
 .about .lede b { color: var(--ink); font-weight: 600; }
 h4 { font-size: 12.5px; font-weight: 600; margin: 0 0 10px; color: var(--ink); letter-spacing: .01em; }
 .muted { color: var(--faint); }
+.jfilters { display: grid; gap: 10px; }
+.jseg { display: flex; flex-wrap: wrap; border: 1px solid var(--line-2); border-radius: var(--r); overflow: hidden; width: fit-content; max-width: 100%; }
+.jseg button { height: 30px; padding: 0 11px; border: 0; background: none; color: var(--dim); font-size: 12.5px; cursor: pointer; }
+.jseg button + button { border-left: 1px solid var(--line); }
+.jseg button:hover { color: var(--ink); background: var(--hover); }
+.jseg button[aria-pressed="true"] { color: var(--ink); background: rgba(233,230,223,.07); box-shadow: inset 0 -2px 0 var(--accent); }
+.jrow { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 10px; font-size: 12.5px; color: var(--dim); }
+.jcheck { display: inline-flex; align-items: center; gap: 7px; cursor: pointer; }
+.jcheck input { accent-color: var(--accent); }
+.jsort select { margin-left: 6px; height: 28px; padding: 0 6px; background: var(--surface); color: var(--ink); border: 1px solid var(--line-2); border-radius: 4px; font-size: 12.5px; }
+.jcount { margin: -6px 0 0; font-size: 12px; color: var(--faint); }
 .chart { position: relative; }
 .chart-sub { margin: -4px 0 10px; font-size: 13px; line-height: 1.5; color: var(--dim); }
 .legend-row { display: flex; gap: 16px; margin: 0 0 6px; font-size: 12.5px; color: var(--dim); }
@@ -366,6 +377,7 @@ dl.params.keys > div { grid-template-columns: 84px 1fr; }
   #viewForm > .lede { display: none; }
   .panel { height: 74%; }
   .songbtn { position: absolute; top: calc(env(safe-area-inset-top, 0px) + 18px); right: max(16px, env(safe-area-inset-right, 0px)); }
+  #app.panel-open .songbtn { display: none; }
   .welcome { left: 16px; right: 16px; width: auto; bottom: calc(env(safe-area-inset-bottom, 0px) + 16px); padding: 18px; }
   .welcome h2 { font-size: 24px; }
   .replay { bottom: calc(env(safe-area-inset-bottom, 0px) + 16px); }
@@ -2533,18 +2545,22 @@ void main(){
     };
   }
 
-  let jQuery = '';
+  let jQuery = '', jRegion = 'all', jSort = 'new', jMis = false;
   function renderJournal() {
     const el = $('#viewJournal');
     if (!entries.length) { el.innerHTML = '<p class="lede">No entries yet. Each entry you log shows up here, newest first.</p>'; return; }
     const terms = norm(jQuery).split(/\s+/).filter(Boolean);
     const hay = (e) => [e.label, e.trigger, e.reflection, e.bodyNote, e.contextNote, e.regulationNote, ...(e.body || []), ...(e.context || []), ...(e.regulation || []), REGIONS[regionOf(e)].name].join(' ').toLowerCase();
-    const list = [...entries].sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0)).filter((e) => !terms.length || terms.every((t) => hay(e).includes(t)));
+    const sorters = { new: (a, b) => (b.createdAt || 0) - (a.createdAt || 0), old: (a, b) => (a.createdAt || 0) - (b.createdAt || 0), hot: (a, b) => (b.intensity || 0) - (a.intensity || 0) || (b.createdAt || 0) - (a.createdAt || 0) };
+    const list = [...entries].sort(sorters[jSort] || sorters.new)
+      .filter((e) => jRegion === 'all' || regionOf(e) === jRegion)
+      .filter((e) => !jMis || isMisfire(e))
+      .filter((e) => !terms.length || terms.every((t) => hay(e).includes(t)));
     const hadFocus = document.activeElement && document.activeElement.id === 'jSearch';
-    let html = list.length ? '' : `<p class="lede">Nothing matches “${esc(jQuery)}”.</p>`; let lastDay = '';
+    let html = list.length ? '' : `<p class="lede">No entries match these filters.</p>`; let lastDay = '';
     for (const e of list) {
       const day = e.createdAt ? fmtDay.format(e.createdAt) : 'Undated';
-      if (day !== lastDay) { html += `<p class="day">${esc(day)}</p>`; lastDay = day; }
+      if (jSort !== 'hot' && day !== lastDay) { html += `<p class="day">${esc(day)}</p>`; lastDay = day; }
       const d = derived.get(e.id);
       const sub0 = e.trigger || e.reflection || (e.body || []).join(', ') || '';
       const sub = REGIONS[regionOf(e)].name + (sub0 ? ' · ' + sub0 : '');
@@ -2555,12 +2571,21 @@ void main(){
     const needBk = mode === 'local' && own >= 3 && Date.now() - lastBk > 14 * 864e5;
     el.innerHTML = `${needBk ? `<div class="backup"><span><b>Your entries live only in this browser.</b> ${lastBk ? 'Last backup ' + esc(fmtDay.format(lastBk)) + '.' : 'You have not backed them up yet.'}</span><button type="button" class="linkbtn" id="btnBackup">Back up now</button></div>` : ''}<p class="lede">${entries.length} ${entries.length === 1 ? 'entry' : 'entries'}. Pick one to fly to it.</p>
       <input type="search" id="jSearch" class="search" placeholder="Search names, triggers, places" aria-label="Search the journal" value="${esc(jQuery)}" autocomplete="off">
+      <div class="jfilters">
+        <div class="jseg" role="group" aria-label="Region">${['all', ...PLACES].map((k) => `<button type="button" data-jr="${k}" aria-pressed="${jRegion === k}">${k === 'all' ? 'All' : esc(REGIONS[k].name.replace(/^The /, ''))}</button>`).join('')}</div>
+        <div class="jrow"><label class="jcheck"><input type="checkbox" id="jMis" ${jMis ? 'checked' : ''}> Misreads only</label>
+        <label class="jsort">Sort <select id="jSort"><option value="new"${jSort === 'new' ? ' selected' : ''}>Newest</option><option value="old"${jSort === 'old' ? ' selected' : ''}>Oldest</option><option value="hot"${jSort === 'hot' ? ' selected' : ''}>Most intense</option></select></label></div>
+      </div>
+      ${list.length !== entries.length ? `<p class="jcount">Showing ${list.length} of ${entries.length}</p>` : ''}
       <div class="j-actions"><button type="button" class="btn" id="btnReplay"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M5 3l8 5-8 5z" fill="currentColor"/></svg>Replay your sky</button><button type="button" class="btn ghost" id="btnCsv">Export CSV</button><button type="button" class="btn ghost" id="btnJson">JSON</button>${canWrite ? '<button type="button" class="btn ghost" id="btnImport">Import</button>' : ''}</div>
       <div class="rel">${html}</div>`;
     $('#btnReplay').onclick = startReplay;
     const bk = $('#btnBackup'); if (bk) bk.onclick = () => exportData('json');
     const js = $('#jSearch');
     js.oninput = () => { jQuery = js.value; renderJournal(); };
+    el.querySelectorAll('[data-jr]').forEach((b) => { b.onclick = () => { jRegion = b.dataset.jr; renderJournal(); }; });
+    $('#jMis').onchange = (ev) => { jMis = ev.target.checked; renderJournal(); };
+    $('#jSort').onchange = (ev) => { jSort = ev.target.value; renderJournal(); };
     if (hadFocus) { js.focus(); js.setSelectionRange(js.value.length, js.value.length); }
     const bc = $('#btnCsv'); if (bc) bc.onclick = () => exportData('csv');
     const bj = $('#btnJson'); if (bj) bj.onclick = () => exportData('json');
