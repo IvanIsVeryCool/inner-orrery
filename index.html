@@ -15,6 +15,8 @@
 <meta property="og:image:height" content="630">
 <meta name="twitter:card" content="summary_large_image">
 <link rel="icon" href="favicon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="icon-180.png">
+<link rel="manifest" href="manifest.webmanifest">
 <style>:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}body{margin:0}img{max-width:100%}[hidden]{display:none!important}</style>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -220,6 +222,14 @@ button.tag { font: inherit; font-size: 11px; line-height: 1; background: none; c
 .about .lede b { color: var(--ink); font-weight: 600; }
 h4 { font-size: 12.5px; font-weight: 600; margin: 0 0 10px; color: var(--ink); letter-spacing: .01em; }
 .muted { color: var(--faint); }
+.why { margin: -8px 0 0; font-size: 13px; line-height: 1.55; color: var(--dim); }
+.why b { color: var(--ink); font-weight: 500; }
+.insights { display: grid; gap: 0; margin: 0; padding: 0; list-style: none; }
+.insights li { padding: 11px 0; border-top: 1px solid var(--line); line-height: 1.55; color: var(--ink); font-size: 14px; }
+.insights li:last-child { border-bottom: 1px solid var(--line); }
+.backup { display: flex; flex-wrap: wrap; align-items: baseline; gap: 6px 12px; padding: 12px 14px; border: 1px solid rgba(255,143,94,.35); border-radius: var(--r); font-size: 13px; color: var(--dim); }
+.backup b { color: var(--ink); font-weight: 500; }
+.toast .linkbtn { margin-left: 12px; color: var(--accent); }
 
 /* form */
 form { display: grid; gap: 4px; }
@@ -339,6 +349,7 @@ dl.params.keys > div { grid-template-columns: 84px 1fr; }
 </style>
 </head>
 <body>
+<noscript><p style="margin:0;padding:24px;font:15px/1.6 system-ui,sans-serif;color:#e9e6df;background:#030304">Inner Orrery draws its sky with JavaScript and WebGL. Turn JavaScript on to open your journal.</p></noscript>
 
 <div id="app">
   <canvas id="gl" aria-hidden="true"></canvas>
@@ -390,6 +401,7 @@ dl.params.keys > div { grid-template-columns: 84px 1fr; }
           <li><svg class="ico" viewBox="0 0 22 14" aria-hidden="true"><circle cx="11" cy="7" r="1.8" fill="#ece8df"/><path d="M6.2 4.6A5.4 5.4 0 0 1 9 2M15.6 4.4A5.4 5.4 0 0 1 16.4 8.6M13 11.9A5.4 5.4 0 0 1 7.4 11" fill="none" stroke="#ff8f5e" stroke-width="1.3"/></svg><span>A flickering corona marks a misread: too strong, wrong label or wrong target.</span></li>
           <li><svg class="ico" viewBox="0 0 22 14" aria-hidden="true"><path d="M2 11 11 3 20 9" stroke="#9a978f" stroke-width=".9" fill="none"/><circle cx="2" cy="11" r="1.6" fill="#ff7652"/><circle cx="11" cy="3" r="1.6" fill="#ffcc5c"/><circle cx="20" cy="9" r="1.6" fill="#6fcfff"/></svg><span>Lines join entries that share a label, body signature, context or trigger.</span></li>
           <li><svg class="ico" viewBox="0 0 22 14" aria-hidden="true"><path d="M3 12 Q11 -2 19 12" stroke="#5f5d58" stroke-width="1" fill="none" stroke-dasharray="2 2"/><circle cx="7" cy="5.6" r="1.5" fill="#ece8df"/><circle cx="11" cy="3.6" r="1.5" fill="#ece8df"/><circle cx="15" cy="5.6" r="1.5" fill="#ece8df"/></svg><span>Feelings with the same name fall into resonance and orbit together.</span></li>
+          <li><svg class="ico" viewBox="0 0 22 14" aria-hidden="true"><path d="M11 2 16 7 11 12 6 7Z" fill="none" stroke="#efe2c6" stroke-width="1"/></svg><span>Each region holds one kind of feeling. Travel with the place menu, the star map or the markers on the horizon.</span></li>
           <li><svg class="ico" viewBox="0 0 22 14" aria-hidden="true"><path d="M20 7 Q14 1 10 6 T4 7" stroke="#5f5d58" stroke-width="1" fill="none"/><circle cx="4" cy="7" r="2.2" fill="#000" stroke="#ffb46e" stroke-width=".8"/></svg><span>Older entries sink slowly inward. History becomes baseline.</span></li>
         </ul>
       </details>
@@ -424,7 +436,7 @@ dl.params.keys > div { grid-template-columns: 84px 1fr; }
           <fieldset class="param" data-name="How it felt" data-param="Label">
             <legend>How it felt</legend>
             <p class="q">What would you call it? Pick one or type your own word.</p>
-            <input id="fLabel" type="text" list="labelList" autocomplete="off" maxlength="40" placeholder="anxious, proud, restless…">
+            <input id="fLabel" type="text" autocomplete="off" maxlength="40" placeholder="anxious, proud, restless…">
             <datalist id="labelList"></datalist>
             <div class="chips" id="cLabel"></div>
             <div class="rng">
@@ -1726,6 +1738,10 @@ void main(){
     const showLabel = sel || hov || (entries.length <= 22 && !selected) || (selected && !dim && entries.length <= 60);
     if (showLabel && e.label) {
       g.font = `${sel ? 600 : 500} ${sel ? 13 : 11.5}px "IBM Plex Sans", system-ui, sans-serif`;
+      const lx = p.x + s * 2 + 6, lw = g.measureText(e.label).width, rect = [lx - 2, p.y - 10, lx + lw + 2, p.y + 6];
+      const clash = labelRects.some((q) => rect[0] < q[2] && rect[2] > q[0] && rect[1] < q[3] && rect[3] > q[1]);
+      if (clash && !sel && !hov) { g.restore(); return; }
+      labelRects.push(rect);
       g.fillStyle = sel || hov ? 'rgba(244,240,232,0.96)' : 'rgba(236,232,223,0.6)';
       g.shadowColor = 'rgba(0,0,0,0.9)'; g.shadowBlur = 6;
       g.fillText(e.label, p.x + s * 2 + 6, p.y + 4);
@@ -1766,6 +1782,7 @@ void main(){
     g.restore();
   }
 
+  const labelRects = [];
   const beaconPos = new Map();
   const mapHits = [];
   function drawBeacons(g, now) {
@@ -1979,7 +1996,10 @@ void main(){
     drawEdges(g);
     for (const it of items) if (!it.hidden) drawTrail(g, it.e, it.d, it.r, it.th, selected && selected !== it.e.id ? 0.4 : 1);
     items.sort((a, b) => b.p.depth - a.p.depth);
-    for (const it of items) if (!it.hidden) drawStar(g, it, now, k0);
+    labelRects.length = 0;
+    const selIt = items.find((it) => it.e.id === selected || it.e.id === hover);
+    for (const it of items) if (!it.hidden && it !== selIt) drawStar(g, it, now, k0);
+    if (selIt && !selIt.hidden) drawStar(g, selIt, now, k0);
     drawPlanetLabels(g);
   }
 
@@ -2368,6 +2388,14 @@ void main(){
     if (mode === 'db') { await col.doc(id).set(data); return; }
     entries = entries.map((e) => (e.id === id ? { id, ...data } : e)); persistLocal(); onEntries();
   }
+  async function restoreEntry(copy) {
+    const { id, ...data } = copy;
+    try {
+      if (mode === 'db') await col.doc(id).set(data);
+      else { entries.push(copy); persistLocal(); onEntries(); }
+      toast(`Restored “${copy.label || 'entry'}”.`);
+    } catch (_) { toast('That entry could not be restored.'); }
+  }
   async function deleteEntry(id) {
     if (mode === 'db') { await col.doc(id).delete(); return; }
     entries = entries.filter((e) => e.id !== id); persistLocal(); onEntries();
@@ -2435,6 +2463,7 @@ void main(){
         <div style="min-width:0"><h3 class="d-label">${esc(e.label || 'Unnamed')}</h3>
         <p class="meta">${e.createdAt ? esc(fmtDay.format(e.createdAt) + ' · ' + fmtTime.format(e.createdAt)) : ''} ${tags}</p></div>
       </div>
+      <p class="why">It sits in <b>${esc(rg.name)}</b> because it felt ${v > 0 ? 'pleasant' : v < 0 ? 'unpleasant' : 'neutral'} (${v > 0 ? '+' : ''}${v}) at intensity ${esc(e.intensity ?? 5)} of 10.</p>
       <div class="kpis">
         <div class="kpi"><span class="k">Intensity</span><span class="v">${esc(e.intensity ?? '–')}${e.after != null ? ' → ' + esc(e.after) : ''}</span></div>
         <div class="kpi"><span class="k">Feel</span><span class="v">${v === 0 ? 'Neutral' : (v < 0 ? 'Unpleasant ' : 'Pleasant ') + Math.abs(v)}</span></div>
@@ -2451,7 +2480,7 @@ void main(){
         ${paramRow('Failure mode', (e.read ? `<div>${esc(READ_NAMES[e.read])}</div>` : '') + para(e.reflection))}
         ${paramRow('Regulation', chipList(e.regulation) + para(e.regulationNote))}
       </dl>
-      <div><h4>Related stars</h4>${rel.length ? `<ul class="rel">${rel.map((r) => {
+      <div><h4>Related entries</h4>${rel.length ? `<ul class="rel">${rel.map((r) => {
         const rd = derived.get(r.b.id);
         return `<li><button type="button" class="row" data-goto="${esc(r.b.id)}" style="--c:${rgb(rd.color)}"><span class="dot"></span><span class="t"><b>${esc(r.b.label || 'Unnamed')}</b><small>${esc(r.why.join(' · '))}</small></span><span class="r">${r.b.createdAt ? esc(fmtDay.format(r.b.createdAt)) : ''}</span></button></li>`;
       }).join('')}</ul>` : '<p class="lede">No close relations yet. Lines form when entries share a label, body signature, context, baseline or trigger words.</p>'}</div>
@@ -2462,7 +2491,8 @@ void main(){
     const dn = $('#delNo'); if (dn) dn.onclick = () => { confirmDel = false; renderDetail(); };
     const dy = $('#delYes'); if (dy) dy.onclick = async () => {
       dy.disabled = true;
-      try { await deleteEntry(e.id); confirmDel = false; selected = null; closePanel(); toast('Entry deleted.'); }
+      const copy = { ...e };
+      try { await deleteEntry(e.id); confirmDel = false; selected = null; closePanel(); toast(`Deleted “${copy.label || 'entry'}”.`, { label: 'Undo', run: () => restoreEntry(copy) }); }
       catch (_) { toast('That entry could not be deleted. Try again in a moment.'); dy.disabled = false; }
     };
   }
@@ -2484,11 +2514,15 @@ void main(){
       const sub = REGIONS[regionOf(e)].name + (sub0 ? ' · ' + sub0 : '');
       html += `<button type="button" class="row" data-goto="${esc(e.id)}" style="--c:${rgb(d.color)}"><span class="dot"></span><span class="t"><b>${esc(e.label || 'Unnamed')}</b><small>${esc(sub)}</small></span><span class="r"><span>I ${esc(e.intensity ?? '–')}${e.after != null ? '→' + esc(e.after) : ''}</span>${d.misfire ? '<span class="tag flare">Misread</span>' : e.example ? '<span class="tag">Example</span>' : ''}</span></button>`;
     }
-    el.innerHTML = `<p class="lede">${entries.length} ${entries.length === 1 ? 'entry' : 'entries'}. Pick one to fly to it.</p>
+    let lastBk = 0; try { lastBk = +localStorage.getItem('inner-orrery-backup') || 0; } catch (_) {}
+    const own = entries.filter((x) => !x.example).length;
+    const needBk = mode === 'local' && own >= 3 && Date.now() - lastBk > 14 * 864e5;
+    el.innerHTML = `${needBk ? `<div class="backup"><span><b>Your entries live only in this browser.</b> ${lastBk ? 'Last backup ' + esc(fmtDay.format(lastBk)) + '.' : 'You have not backed them up yet.'}</span><button type="button" class="linkbtn" id="btnBackup">Back up now</button></div>` : ''}<p class="lede">${entries.length} ${entries.length === 1 ? 'entry' : 'entries'}. Pick one to fly to it.</p>
       <input type="search" id="jSearch" class="search" placeholder="Search names, triggers, places" aria-label="Search the journal" value="${esc(jQuery)}" autocomplete="off">
       <div class="j-actions"><button type="button" class="btn" id="btnReplay"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M5 3l8 5-8 5z" fill="currentColor"/></svg>Replay your sky</button><button type="button" class="btn ghost" id="btnCsv">Export CSV</button><button type="button" class="btn ghost" id="btnJson">JSON</button>${canWrite ? '<button type="button" class="btn ghost" id="btnImport">Import</button>' : ''}</div>
       <div class="rel">${html}</div>`;
     $('#btnReplay').onclick = startReplay;
+    const bk = $('#btnBackup'); if (bk) bk.onclick = () => exportData('json');
     const js = $('#jSearch');
     js.oninput = () => { jQuery = js.value; renderJournal(); };
     if (hadFocus) { js.focus(); js.setSelectionRange(js.value.length, js.value.length); }
@@ -2503,6 +2537,40 @@ void main(){
     return `<div class="bar"${color ? ` style="--c:${color}"` : ''}><span class="lbl" title="${esc(label)}">${esc(label)}</span><span class="track"><span class="fill" style="display:block;width:${pct}%"></span></span><span class="n">${esc(right)}</span></div>`;
   }
 
+  // plain-sentence takeaways about how body, cognition and emotion interacted
+  function insights() {
+    const out = [];
+    const real = entries;
+    if (real.length < 2) return out;
+    const sum = { body: 0, cognition: 0, emotion: 0 };
+    for (const e of real) for (const k in sum) sum[k] += +(e.weights || {})[k] || 0;
+    const tot = sum.body + sum.cognition + sum.emotion || 1;
+    const lead = Object.entries(sum).sort((a, b) => b[1] - a[1])[0];
+    const checked = real.filter((e) => e.read && e.read !== 'unsure');
+    const dep = checked.filter((e) => (e.baseline || []).some((b) => STRESSORS.has(b)));
+    const steady = checked.filter((e) => !(e.baseline || []).some((b) => STRESSORS.has(b)));
+    const rate = (a) => Math.round((a.filter(isMisfire).length / a.length) * 100);
+    if (dep.length >= 2 && steady.length >= 1 && rate(dep) - rate(steady) >= 15) {
+      out.push(`When you started out tired, hungry, stressed or wired on caffeine, <b>${rate(dep)}%</b> of your reads misfired, against ${rate(steady)}% when you started steady. Your body's baseline changed how you read the moment.`);
+    }
+    const byLabel = new Map();
+    for (const e of real) { const k = norm(e.label); if (k) { if (!byLabel.has(k)) byLabel.set(k, []); byLabel.get(k).push(e); } }
+    let best = null;
+    for (const [k, l] of byLabel) {
+      if (l.length < 2) continue;
+      const top = countBy(l.map((e) => e.body))[0];
+      if (top && top[1] >= 2 && (!best || top[1] > best.c)) best = { k, n: l.length, chip: top[0], c: top[1] };
+    }
+    if (best) out.push(`“${esc(best.k)}” showed up ${best.n} times, and ${esc(best.chip.toLowerCase())} came with it ${best.c === best.n ? 'every time' : `${best.c} of those times`}. That is its bodily signature.`);
+    const reg = new Map();
+    for (const e of real) { if (e.after == null || e.intensity == null) continue; for (const r of e.regulation || []) { if (r === 'Nothing yet') continue; const v = reg.get(r) || { s: 0, c: 0 }; v.s += e.intensity - e.after; v.c++; reg.set(r, v); } }
+    const regs = [...reg.entries()].map(([k, v]) => [k, v.s / v.c, v.c]).sort((a, b) => b[1] - a[1]);
+    if (regs.length && regs[0][1] > 0) out.push(`<b>${esc(regs[0][0])}</b> brought intensity down the most, by ${regs[0][1].toFixed(1)} points on average${regs[0][2] > 1 ? ` across ${regs[0][2]} entries` : ''}.`);
+    if (out.length < 3) out.push(`<b>${BEAD_NAME[lead[0]]}</b> spoke loudest overall, carrying ${Math.round((lead[1] / tot) * 100)}% of the weight across your entries.`);
+    if (out.length < 3) { const top = PLACES.map((k) => [k, real.filter((e) => regionOf(e) === k).length]).sort((a, b) => b[1] - a[1])[0]; if (top[1]) out.push(`Most of your entries live in <b>${REGIONS[top[0]].name}</b>, the ${REGIONS[top[0]].quad.toLowerCase()} corner of the map.`); }
+    return out.slice(0, 3);
+  }
+
   function renderPatterns() {
     const el = $('#viewPatterns');
     const n = entries.length;
@@ -2512,7 +2580,9 @@ void main(){
     for (const e of entries) for (const k in sum) sum[k] += +(e.weights || {})[k] || 0;
     const tot = sum.body + sum.cognition + sum.emotion || 1;
     const lead = Object.entries(sum).sort((a, b) => b[1] - a[1])[0][0];
-    let html = `<div><h4>Bead balance</h4><p class="lede" style="margin-bottom:10px">Across ${n} ${n === 1 ? 'entry' : 'entries'}, <b style="color:var(--ink)">${BEAD_NAME[lead]}</b> carried the most entry.</p><div class="bars">
+    const tips = insights();
+    let html = tips.length ? `<div><h4>What your sky is saying</h4><ul class="insights">${tips.map((t) => `<li>${t}</li>`).join('')}</ul></div>` : '';
+    html += `<div class="${tips.length ? 'block' : ''}"><h4>Bead balance</h4><p class="lede" style="margin-bottom:10px">Across ${n} ${n === 1 ? 'entry' : 'entries'}, <b style="color:var(--ink)">${BEAD_NAME[lead]}</b> carried the most weight.</p><div class="bars">
       ${['body', 'cognition', 'emotion'].map((k) => barRow(BEAD_NAME[k], sum[k], tot, Math.round((sum[k] / tot) * 100) + '%', rgb(BEAD[k]))).join('')}</div></div>`;
     // regions
     html += `<div class="block"><h4>Where your entries live</h4><p>Each region is one quarter of the circumplex: pleasant or unpleasant, intense or calm.</p><div class="bars">${PLACES.map((k) => { const c = entries.filter((e) => regionOf(e) === k).length; return barRow(REGIONS[k].name, c, n, String(c), rgb(REGIONS[k].color)); }).join('')}</div></div>`;
@@ -2607,7 +2677,11 @@ void main(){
     if (!canWrite) $('#emptyText').textContent = 'No entries have been logged in this sky yet.';
   }
   let toastTimer = null;
-  function toast(msg) { const t = $('#toast'); t.textContent = msg; t.hidden = false; clearTimeout(toastTimer); toastTimer = setTimeout(() => { t.hidden = true; }, 3400); }
+  function toast(msg, action) {
+    const t = $('#toast'); t.textContent = msg;
+    if (action) { const b = document.createElement('button'); b.type = 'button'; b.className = 'linkbtn'; b.textContent = action.label; b.onclick = () => { t.hidden = true; action.run(); }; t.appendChild(b); }
+    t.hidden = false; clearTimeout(toastTimer); toastTimer = setTimeout(() => { t.hidden = true; }, action ? 7000 : 3400);
+  }
 
   function onEntries() {
     derive();
@@ -2667,6 +2741,8 @@ void main(){
     if (kind === 'json') {
       const clean = list.map(({ id, ...rest }) => ({ id, date: rest.createdAt ? new Date(rest.createdAt).toISOString() : null, ...rest }));
       offerFile(`inner-orrery-${stamp()}.json`, JSON.stringify(clean, null, 2), 'Journal exported as JSON.');
+      try { localStorage.setItem('inner-orrery-backup', String(Date.now())); } catch (_) {}
+      if (currentView === 'journal') setTimeout(renderJournal, 50);
       return;
     }
     const cols = ['date', 'label', 'intensity', 'intensity_after', 'valence', 'body_weight', 'cognition_weight', 'emotion_weight', 'body_signature', 'body_note', 'trigger', 'context', 'context_note', 'baseline', 'frequency', 'read', 'reflection', 'regulation', 'regulation_note', 'example'];
