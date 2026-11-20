@@ -303,10 +303,6 @@ dl.params.keys > div { grid-template-columns: 84px 1fr; }
         <div class="toolbar">
         <button class="btn" id="btnJournal" type="button" aria-pressed="false">Journal</button>
         <button class="btn" id="btnPatterns" type="button" aria-pressed="false">Patterns</button>
-        <button class="btn" id="btnKaleido" type="button" aria-pressed="false" aria-label="Kaleidoscope view">
-          <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M8 1.5 13.6 4.75v6.5L8 14.5 2.4 11.25v-6.5Z M8 1.5v13 M2.4 4.75l11.2 6.5 M13.6 4.75l-11.2 6.5" stroke="currentColor" stroke-width="1.1" fill="none"/></svg>
-          <span class="lbl-long">Kaleidoscope</span>
-        </button>
         <button class="btn" id="btnCapture" type="button" aria-label="Save a picture of the sky" hidden>
           <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M2 5.2h2.6L6 3.5h4l1.4 1.7H14v7.3H2Z" stroke="currentColor" stroke-width="1.1" fill="none" stroke-linejoin="round"/><circle cx="8" cy="8.6" r="2.3" stroke="currentColor" stroke-width="1.1" fill="none"/></svg>
           <span class="lbl-long">Capture</span>
@@ -543,7 +539,7 @@ dl.params.keys > div { grid-template-columns: 84px 1fr; }
   let selected = null, hover = null;
   const view = { rot: 0.9, el: 0.24, zoom: 1.15 };
   let cx = 0, cy = 0, hh = 300, tanH = 0.3, W = 0, H = 0, dpr = 1;
-  let kaleido = false, canWrite = false, mode = 'loading', loaded = false;
+  let canWrite = false, mode = 'loading', loaded = false;
   let col = null;
   const bornAt = new Map();
   const screenPos = new Map();
@@ -1058,23 +1054,14 @@ void main(){
 precision highp float;
 in vec2 vUv; out vec4 o;
 uniform sampler2D uScene, uB1, uB2, uS;
-uniform float uIn, uTime, uKal, uA0, uDpr, uExposure, uFade, uPulse;
-uniform vec2 uScreen, uCtr;
+uniform float uIn, uTime, uExposure, uFade, uPulse;
+uniform vec2 uScreen;
 #define PI 3.14159265359
 float hash12(vec2 p){ vec3 p3 = fract(vec3(p.xyx) * 0.1031); p3 += dot(p3, p3.yzx + 33.33); return fract((p3.x + p3.y) * p3.z); }
 vec3 aces(vec3 x){ return clamp((x*(2.51*x + 0.03)) / (x*(2.43*x + 0.59) + 0.14), 0.0, 1.0); }
 void main(){
   vec2 fc = gl_FragCoord.xy;
   vec2 uv = fc / uScreen;
-  if (uKal > 0.5){
-    vec2 q = vec2(fc.x, uScreen.y - fc.y) / uDpr - uCtr;
-    float r = length(q); float th = atan(q.y, q.x);
-    float seg = 2.0*PI/12.0;
-    float t = mod(th, 2.0*seg); if (t > seg) t = 2.0*seg - t;
-    float src = t + uA0;
-    vec2 sp = uCtr + r*vec2(cos(src), sin(src));
-    uv = vec2(sp.x*uDpr/uScreen.x, 1.0 - sp.y*uDpr/uScreen.y);
-  }
   vec2 d = uv - 0.5;
   float ca = 0.006 * dot(d, d);
   vec3 c;
@@ -1099,8 +1086,6 @@ void main(){
   const glCanvas = $('#gl');
   const fx = $('#fx');
   const ctx = fx.getContext('2d');
-  const off = document.createElement('canvas');
-  const offCtx = off.getContext('2d');
   let G = null; // WebGL state
 
   function buildSky(size) {
@@ -1295,9 +1280,9 @@ void main(){
     pass(cp, null, glCanvas.width, glCanvas.height);
     bindTex(cp, 'uScene', 0, T.scene.tex); bindTex(cp, 'uB1', 1, T.a1.tex); bindTex(cp, 'uB2', 2, T.a2.tex); bindTex(cp, 'uS', 3, T.s1.tex);
     gl.uniform1f(cp.u.uFade, fadeEase()); gl.uniform1f(cp.u.uPulse, pulse);
-    gl.uniform1f(cp.u.uIn, inScale); gl.uniform1f(cp.u.uTime, simT); gl.uniform1f(cp.u.uKal, kaleido ? 1 : 0);
-    gl.uniform1f(cp.u.uA0, kaleidoA0()); gl.uniform1f(cp.u.uDpr, G.gdpr); gl.uniform1f(cp.u.uExposure, 1.0);
-    gl.uniform2f(cp.u.uScreen, glCanvas.width, glCanvas.height); gl.uniform2f(cp.u.uCtr, cx, cy);
+    gl.uniform1f(cp.u.uIn, inScale); gl.uniform1f(cp.u.uTime, simT);
+    gl.uniform1f(cp.u.uExposure, 1.0);
+    gl.uniform2f(cp.u.uScreen, glCanvas.width, glCanvas.height);
     gl.drawArrays(gl.TRIANGLES, 0, 3);
   }
   function planetWorld() {
@@ -1325,7 +1310,6 @@ void main(){
     }
     return n;
   }
-  const kaleidoA0 = () => (reduceMotion ? 0.3 : simT * 0.04);
 
   // ---------- 2D fallback background (no WebGL2) ----------
   let fbBg = null;
@@ -1519,24 +1503,6 @@ void main(){
     drawPlanetLabels(g);
   }
 
-  function composeKaleido() {
-    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-    ctx.globalCompositeOperation = 'source-over';
-    ctx.clearRect(0, 0, W, H);
-    if (!G) { ctx.fillStyle = '#020206'; ctx.fillRect(0, 0, W, H); }
-    const seg = 12, ang = TAU / seg, R = Math.hypot(W, H);
-    const a0 = kaleidoA0();
-    for (let i = 0; i < seg; i++) {
-      ctx.save();
-      ctx.translate(cx, cy);
-      ctx.rotate(i * ang);
-      if (i % 2) { ctx.rotate(ang); ctx.scale(1, -1); }
-      ctx.beginPath(); ctx.moveTo(0, 0); ctx.arc(0, 0, R, -0.002, ang + 0.002); ctx.closePath(); ctx.clip();
-      ctx.rotate(-a0);
-      ctx.drawImage(off, -cx, -cy, W, H);
-      ctx.restore();
-    }
-  }
 
   // ---------- Frame loop ----------
   let last = performance.now();
@@ -1578,8 +1544,7 @@ void main(){
       try { renderGL(pw, ns); } catch (err) { console.error(err); }
       adaptQuality(dtMs);
     }
-    if (kaleido) { drawOverlay(offCtx, now); composeKaleido(); }
-    else drawOverlay(ctx, now);
+    drawOverlay(ctx, now);
     if (captureReq) { const r = captureReq; captureReq = null; doCapture(r); }
     if (++readoutTick % 10 === 0) {
       const az = ((view.rot * 180 / Math.PI) % 360 + 360) % 360;
@@ -1599,7 +1564,7 @@ void main(){
   function resize() {
     dpr = Math.min(window.devicePixelRatio || 1, 2);
     W = fx.clientWidth || window.innerWidth; H = fx.clientHeight || window.innerHeight;
-    for (const c of [fx, off]) { c.width = Math.round(W * dpr); c.height = Math.round(H * dpr); }
+    for (const c of [fx]) { c.width = Math.round(W * dpr); c.height = Math.round(H * dpr); }
     if (G) sizeTargets(); else buildFallbackBg();
     if (!resize.done) { const t = layoutTarget(); cx = t.x; cy = t.y; hh = t.hh; tanH = t.tan; resize.done = true; }
   }
@@ -1642,7 +1607,7 @@ void main(){
       hideTip();
       return;
     }
-    if (kaleido || ev.pointerType === 'touch') return;
+    if (ev.pointerType === 'touch') return;
     const h = hit(x, y);
     fx.classList.toggle('pointing', !!h);
     hover = h && h.kind === 'star' ? h.id : null;
@@ -1655,14 +1620,12 @@ void main(){
     const wasClick = !drag.moved;
     if (drag.moved && performance.now() - drag.lt < 80) { vel.rot = clamp(-drag.vx * 5, -4, 4); vel.el = clamp(drag.vy * 4, -2, 2); }
     drag = null; fx.classList.remove('dragging');
-    if (wasClick && !kaleido) {
+    if (wasClick) {
       const rect = fx.getBoundingClientRect();
       const h = hit(ev.clientX - rect.left, ev.clientY - rect.top);
       if (h && h.kind === 'star') select(h.id);
       else if (h && h.kind === 'planet') openPanel('patterns');
       else if (selected) { selected = null; if (currentView === 'detail') closePanel(); }
-    } else if (wasClick && kaleido) {
-      toast('Kaleidoscope view is for looking. Turn it off to pick a star.');
     }
   };
   fx.addEventListener('pointerup', endDrag);
@@ -1737,10 +1700,6 @@ void main(){
   $('#btnAbout').addEventListener('click', () => currentView === 'about' ? closePanel() : openPanel('about'));
   $('#btnLog').addEventListener('click', () => { selected = null; if (editingId) { editingId = null; resetForm(); } setWhen(Date.now()); openPanel('form'); setTimeout(() => $('#fLabel').focus({ preventScroll: true }), 60); });
   $('#btnEmptyLog').addEventListener('click', () => $('#btnLog').click());
-  $('#btnKaleido').addEventListener('click', (ev) => {
-    kaleido = !kaleido; ev.currentTarget.setAttribute('aria-pressed', String(kaleido)); hideTip(); hover = null;
-    if (kaleido) toast('Kaleidoscope: the same sky, folded into twelve-way symmetry.');
-  });
   document.addEventListener('keydown', (ev) => { if (ev.key === 'Escape' && panelOpen()) { closePanel(); selected = null; } });
   $('#panelBody').addEventListener('click', (ev) => {
     const b = ev.target.closest('[data-goto]'); if (b) { select(b.dataset.goto); }
@@ -2126,7 +2085,7 @@ void main(){
     if (!entries.length) return;
     const order = [...entries].sort((a, b) => (a.createdAt || 0) - (b.createdAt || 0));
     replay = { order, idx: 0, shown: new Set(), t0: performance.now() + 900, step: clamp(16000 / order.length, 420, 1400) };
-    selected = null; closePanel(); kaleido = false; $('#btnKaleido').setAttribute('aria-pressed', 'false');
+    selected = null; closePanel();
     intro = null; view.zoom = Math.min(view.zoom, 1);
     $('#replay').hidden = false; $('#replayText').textContent = 'Clearing the sky…';
     updateEmpty();

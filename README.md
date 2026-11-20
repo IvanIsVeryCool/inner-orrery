@@ -9,7 +9,7 @@ Every feeling you log becomes a star orbiting a black hole. Its color is its mix
 - **A real black hole.** Each pixel traces a light ray through the Schwarzschild metric in WebGL2: gravitational lensing, the lensed far side of the accretion disk, the photon ring, Doppler beaming and gravitational redshift. The wide-field bending is softened slightly so the background stays readable.
 - **The seven parameters.** Each log walks through label, bodily signature, trigger, context, history and baseline, failure mode, and regulation.
 - **Patterns.** Bead balance, misread rate, how baseline affects misreads, which regulation strategies lowered intensity, and recurring signatures.
-- **Replay, Kaleidoscope, Capture, Export and Import.**
+- **Replay, Capture, Export and Import.**
 - **A hidden track.** Find the faint star in the top-right corner.
 
 ## Privacy
