@@ -228,6 +228,11 @@ button.tag { font: inherit; font-size: 11px; line-height: 1; background: none; c
 .about .lede b { color: var(--ink); font-weight: 600; }
 h4 { font-size: 12.5px; font-weight: 600; margin: 0 0 10px; color: var(--ink); letter-spacing: .01em; }
 .muted { color: var(--faint); }
+.today { margin: 8px 0 0; font-size: 12.5px; color: var(--dim); }
+.today .linkbtn { color: var(--accent); }
+.rempty { position: absolute; z-index: 3; left: 50%; top: 66%; transform: translateX(-50%); width: min(380px, calc(100% - 48px)); display: grid; justify-items: center; gap: 14px; text-align: center; }
+.rempty p { margin: 0; font-size: 14px; line-height: 1.6; color: var(--ink); text-shadow: 0 1px 14px #000, 0 0 2px #000; }
+#app.panel-open .rempty { display: none; }
 .why { margin: -8px 0 0; font-size: 13px; line-height: 1.55; color: var(--dim); }
 .why b { color: var(--ink); font-weight: 500; }
 .insights { display: grid; gap: 0; margin: 0; padding: 0; list-style: none; }
@@ -368,6 +373,7 @@ dl.params.keys > div { grid-template-columns: 84px 1fr; }
         <h1><svg viewBox="0 0 24 24" aria-hidden="true"><ellipse cx="12" cy="13" rx="11" ry="3" fill="none" stroke="#f2b37a" stroke-width="1.3"/><path d="M5.6 12a6.4 5.6 0 0 1 12.8 0" fill="none" stroke="#ffe2bd" stroke-width="1.1"/><circle cx="12" cy="12" r="4.2" fill="#000" stroke="#fff1dc" stroke-width=".7"/></svg>Inner Orrery</h1>
         <div class="locwrap hit"><button class="loc" id="loc" type="button" aria-haspopup="menu" aria-expanded="false"></button><div class="regions" id="regionMenu" role="menu" hidden></div></div>
         <p class="stats" id="stats" aria-live="polite"><span><b>–</b> entries</span></p>
+        <p class="today hit" id="today" hidden></p>
         <p class="note hit" id="note">Loading your sky…</p>
       </header>
       <div class="ctl-col">
@@ -422,6 +428,10 @@ dl.params.keys > div { grid-template-columns: 84px 1fr; }
 
   <div class="tip" id="tip" hidden></div>
 
+  <div class="rempty" id="rempty" hidden>
+    <p id="remptyText"></p>
+    <button class="btn" id="btnRemptyLog" type="button">Log a feeling</button>
+  </div>
   <div class="empty" id="empty" hidden>
     <h2>An empty sky</h2>
     <p id="emptyText">Log the first thing you felt today. It becomes a star, and every entry after it finds its orbit and its neighbours.</p>
@@ -1911,7 +1921,7 @@ void main(){
     const tnow = performance.now();
     for (const id of [...bornAt.keys()]) bornAt.set(id, tnow);
     $('#btnMap').setAttribute('aria-pressed', String(to === 'map'));
-    updateLocation(); showArrival(to);
+    updateLocation(); showArrival(to); updateEmpty();
   }
   function updateLocation() {
     const el = $('#loc'); if (!el) return;
@@ -2034,7 +2044,7 @@ void main(){
       const pr = clamp((now - trav.t0) / trav.dur, 0, 1);
       warp = Math.sin(pr * Math.PI);
       if (pr >= 0.5 && !trav.switched) { trav.switched = true; arrive(trav.to); }
-      if (pr >= 1) { const fn = trav.then; trav = null; warp = 0; if (fn) fn(); }
+      if (pr >= 1) { const fn = trav.then; trav = null; warp = 0; updateEmpty(); if (fn) fn(); }
     }
     if (!intro && !drag && !pinch && !reduceMotion && region !== 'map' && now - lastInteract > 20000) view.rot += dt * 0.012;
     if (replay) {
@@ -2222,6 +2232,7 @@ void main(){
   $('#btnAbout').addEventListener('click', () => currentView === 'about' ? closePanel() : openPanel('about'));
   $('#btnLog').addEventListener('click', () => { selected = null; if (editingId) { editingId = null; resetForm(); } setWhen(Date.now()); openPanel('form'); setTimeout(() => $('#fLabel').focus({ preventScroll: true }), 60); });
   $('#btnEmptyLog').addEventListener('click', () => $('#btnLog').click());
+  $('#btnRemptyLog').addEventListener('click', () => $('#btnLog').click());
   document.addEventListener('keydown', (ev) => {
     if (ev.key !== 'Escape') return;
     if (!$('#regionMenu').hidden) { closeRegionMenu(); return; }
@@ -2682,6 +2693,21 @@ void main(){
     $('#empty').hidden = !show;
     $('#btnEmptyLog').hidden = !canWrite;
     if (!canWrite) $('#emptyText').textContent = 'No entries have been logged in this sky yet.';
+    const here = region !== 'map' ? entries.filter((e) => regionOf(e) === region).length : 1;
+    const R = REGIONS[region];
+    const rshow = loaded && entries.length > 0 && here === 0 && !panelOpen() && !replay && !trav;
+    $('#rempty').hidden = !rshow;
+    if (rshow) {
+      const kinds = { horizon: 'anxiety, anger, overwhelm', ember: 'excitement, pride, hope', tide: 'gratitude, ease, contentment', drift: 'sadness, loneliness, shame' }[region];
+      $('#remptyText').textContent = `Nothing has landed in ${R.name} yet. Feelings that are ${R.quad.toLowerCase().replace(' · ', ' and ')} settle here: ${kinds}.`;
+      $('#btnRemptyLog').hidden = !canWrite;
+    }
+    const tEl = $('#today');
+    const d0 = new Date(); d0.setHours(0, 0, 0, 0);
+    const loggedToday = entries.some((e) => !e.example && (e.createdAt || 0) >= d0.getTime());
+    const tshow = loaded && canWrite && entries.length > 0 && !loggedToday;
+    tEl.hidden = !tshow;
+    if (tshow && !tEl.dataset.ready) { tEl.dataset.ready = '1'; tEl.innerHTML = 'Nothing logged today. <button class="linkbtn" id="btnToday" type="button">How are you feeling right now?</button>'; $('#btnToday').onclick = () => $('#btnLog').click(); }
   }
   let toastTimer = null;
   function toast(msg, action) {
