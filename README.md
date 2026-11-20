@@ -11,7 +11,9 @@ Every feeling you log becomes a star orbiting a black hole. Its color is its mix
 - **The seven parameters.** Each log walks through label, bodily signature, trigger, context, history and baseline, failure mode, and regulation.
 - **Patterns.** Bead balance, misread rate, how baseline affects misreads, which regulation strategies lowered intensity, and recurring signatures.
 - **Replay, Capture, Export and Import.**
-- **Play song.** The button in the top-right corner plays a track made for this project, and the sky pulses with its beat.
+- **Sound.** A generative score plays quietly in the background and changes key and mood with each region, with soft sounds for hovering, opening entries, warping and saving. Turn it off from the speaker button or Settings.
+- **Play song.** The button in the top-right corner plays a track made for this project and swaps the page for a picture while it plays.
+- **Settings.** Visual quality, motion, shortcut keys, sound, and your data (export or delete everything, with undo).
 
 ## Privacy
 
@@ -24,7 +26,8 @@ It is a static site with no build step. On Cloudflare Pages: framework preset **
 | File | Purpose |
 | --- | --- |
 | `index.html` | The whole app: markup, styles, shaders and script |
-| `hidden-track.mp3` | The hidden track |
+| `hidden-track.mp3` | The song behind Play song |
+| `keys.jpg` | The picture shown while the song plays |
 | `og.png` | Link preview image |
 | `favicon.svg` | Tab icon |
 | `_headers` | Cloudflare Pages response headers |

@@ -229,6 +229,19 @@ button.tag { font: inherit; font-size: 11px; line-height: 1; background: none; c
 .about .lede b { color: var(--ink); font-weight: 600; }
 h3.sec { font-size: 12.5px; font-weight: 600; margin: 0 0 10px; color: var(--ink); letter-spacing: .01em; }
 .muted { color: var(--faint); }
+.audiorow { display: flex; align-items: center; gap: 16px; justify-content: flex-end; }
+.songbtn .spk { width: 13px; height: 13px; }
+#sndBtn[aria-pressed="false"] #spkWaves { opacity: .25; }
+.takeover { position: fixed; inset: 0; z-index: 50; display: grid; place-items: center; overflow: hidden; background: #000; opacity: 0; transition: opacity .45s ease; }
+.takeover.show { opacity: 1; }
+.tk-bg { position: absolute; inset: -60px; background-size: cover; background-position: center; filter: blur(40px) brightness(.42) saturate(1.15); }
+.tk-img { position: relative; display: block; max-width: min(92vw, 560px); max-height: calc(100% - 150px); object-fit: contain; border-radius: 6px; box-shadow: 0 30px 90px rgba(0,0,0,.7); will-change: transform; }
+.tk-bar { position: absolute; left: 50%; bottom: calc(env(safe-area-inset-bottom, 0px) + 26px); transform: translateX(-50%); width: min(560px, calc(100% - 32px)); display: flex; align-items: center; gap: 14px; font: 12px var(--f-mono); color: #e9e6df; font-variant-numeric: tabular-nums; }
+.tk-prog { flex: 1; height: 2px; background: rgba(255,255,255,.2); }
+.tk-prog span { display: block; width: 0; height: 100%; background: #efe2c6; }
+.settings .jseg { margin-bottom: 6px; }
+.hintline { margin: 0; font-size: 12.5px; color: var(--dim); line-height: 1.5; }
+.dangerline { font-size: 13px; color: var(--ink); }
 .skip { position: absolute; z-index: 20; left: 12px; top: 12px; padding: 8px 12px; background: var(--accent); color: var(--accent-ink); border-radius: var(--r); font-size: 13px; font-weight: 600; transform: translateY(-200%); }
 .skip:focus { transform: none; }
 .mapcap { position: absolute; z-index: 3; left: 50%; transform: translateX(-50%); bottom: calc(env(safe-area-inset-bottom, 0px) + 18px); width: min(50ch, calc(100% - 640px)); text-align: center; margin: 0; font-size: 13px; line-height: 1.55; color: var(--dim); text-shadow: 0 1px 12px #000, 0 0 2px #000; pointer-events: none; }
@@ -382,8 +395,9 @@ dl.params.keys > div { grid-template-columns: 84px 1fr; }
   #app.panel-open .row-bottom, #app.panel-open .brand { display: none; }
   #viewForm > .lede { display: none; }
   .panel { height: 74%; }
-  .songbtn { position: absolute; top: calc(env(safe-area-inset-top, 0px) + 18px); right: max(16px, env(safe-area-inset-right, 0px)); }
-  #app.panel-open .songbtn { display: none; }
+  .audiorow { position: absolute; top: calc(env(safe-area-inset-top, 0px) + 18px); right: max(16px, env(safe-area-inset-right, 0px)); }
+  #app.panel-open .audiorow { display: none; }
+  .audiorow #sndLabel { display: none; }
   .welcome { left: 16px; right: 16px; width: auto; bottom: calc(env(safe-area-inset-bottom, 0px) + 16px); padding: 18px; }
   .welcome h2 { font-size: 24px; }
   .replay { bottom: calc(env(safe-area-inset-bottom, 0px) + 16px); }
@@ -414,7 +428,7 @@ dl.params.keys > div { grid-template-columns: 84px 1fr; }
         <p class="note hit" id="note">Loading your sky…</p>
       </header>
       <div class="ctl-col">
-      <button class="songbtn hit" id="egg" type="button" aria-pressed="false"><span class="eqmini" aria-hidden="true"><i></i><i></i><i></i></span><span id="eggLabel">Play song</span></button>
+      <div class="audiorow hit"><button class="songbtn" id="sndBtn" type="button" aria-pressed="true"><svg class="spk" viewBox="0 0 16 16" aria-hidden="true"><path d="M2.5 6h2.6L8.5 3v10L5.1 10H2.5Z" fill="currentColor"/><path id="spkWaves" d="M10.6 5.6a3.4 3.4 0 0 1 0 4.8M12.4 3.9a5.8 5.8 0 0 1 0 8.2" fill="none" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/></svg><span id="sndLabel">Sound on</span></button><button class="songbtn" id="egg" type="button" aria-pressed="false"><span class="eqmini" aria-hidden="true"><i></i><i></i><i></i></span><span id="eggLabel">Play song</span></button></div>
       <nav class="controls hit" aria-label="Sky controls">
         <button class="btn primary" id="btnLog" type="button" hidden>
           <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M8 3v10M3 8h10" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" fill="none"/></svg>
@@ -622,6 +636,15 @@ dl.params.keys > div { grid-template-columns: 84px 1fr; }
             <div><dt>Replay</dt><dd>Journal → Replay your sky</dd></div>
           </dl>
         </div>
+        <div><h3 class="sec">Settings</h3>
+          <dl class="params settings">
+            <div><dt>Visual quality</dt><dd><div class="jseg" role="group" aria-label="Visual quality"><button type="button" data-set="quality" data-val="auto">Auto</button><button type="button" data-set="quality" data-val="high">High</button><button type="button" data-set="quality" data-val="balanced">Balanced</button><button type="button" data-set="quality" data-val="low">Low</button></div><p class="hintline">Auto lowers the resolution when your device needs it. Low suits older laptops and phones.</p></dd></div>
+            <div><dt>Motion</dt><dd><div class="jseg" role="group" aria-label="Motion"><button type="button" data-set="motion" data-val="system">Match device</button><button type="button" data-set="motion" data-val="full">Full</button><button type="button" data-set="motion" data-val="reduced">Reduced</button></div><p class="hintline">Reduced slows the orbits and turns off flicker and the opening camera move.</p></dd></div>
+            <div><dt>Shortcut keys</dt><dd><div class="jseg" role="group" aria-label="Shortcut keys"><button type="button" data-set="keys" data-val="on">On</button><button type="button" data-set="keys" data-val="off">Off</button></div><p class="hintline">1–4, M, + and − move around the sky. Turn them off if they get in the way of a screen reader.</p></dd></div>
+            <div><dt>Sound</dt><dd><div class="jseg" role="group" aria-label="Sound"><button type="button" data-set="sound" data-val="on">On</button><button type="button" data-set="sound" data-val="off">Off</button></div><p class="hintline">A quiet score that changes with each region, and soft sounds when you explore. It starts after your first click.</p></dd></div>
+            <div><dt>Your data</dt><dd><div class="j-actions" id="dataActions"></div></dd></div>
+          </dl>
+        </div>
         <p class="lede muted">Press Play song in the top corner and the whole sky moves with the beat.</p>
       </section>
     </div>
@@ -643,6 +666,11 @@ dl.params.keys > div { grid-template-columns: 84px 1fr; }
   <div class="loader" id="loader" aria-hidden="true"><span>Calibrating the horizon</span><i></i></div>
   <input type="file" id="fImport" accept=".json,application/json" hidden>
   <div class="toast" id="toast" role="status" hidden></div>
+  <div class="takeover" id="takeover" hidden role="dialog" aria-modal="true" aria-label="Now playing">
+    <div class="tk-bg"></div>
+    <img class="tk-img" id="tkImg" alt="A man lying in a huge pile of keys, under a chat message that repeats the word keys">
+    <div class="tk-bar"><span id="tkTime">0:00</span><span class="tk-prog"><span id="tkFill"></span></span><button class="btn" id="tkStop" type="button">Stop song</button></div>
+  </div>
 </main>
 
 <script>
@@ -650,7 +678,11 @@ dl.params.keys > div { grid-template-columns: 84px 1fr; }
   'use strict';
   const $ = (s) => document.querySelector(s);
   const TAU = Math.PI * 2;
-  const reduceMotion = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const SETTINGS_KEY = 'inner-orrery-settings';
+  const settings = { quality: 'auto', motion: 'system', keys: 'on', sound: 'on' };
+  try { Object.assign(settings, JSON.parse(localStorage.getItem(SETTINGS_KEY) || '{}')); } catch (_) {}
+  const systemReduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  let reduceMotion = settings.motion === 'reduced' ? true : settings.motion === 'full' ? false : systemReduce;
   const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
   const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
   const norm = (s) => String(s || '').trim().toLowerCase();
@@ -1976,11 +2008,13 @@ void main(){
     if (to === region && !trav) { if (then) then(); return; }
     if (trav) { trav.to = to; trav.then = then; return; }
     intro = null; vel.rot = vel.el = 0; hover = null; mapHover = null; hideTip();
+    sfx.warp();
     trav = { to, then, t0: performance.now(), dur: reduceMotion ? 700 : 2300, switched: false };
   }
   function arrive(to) {
     savedViews[region] = { rot: view.rot, el: view.el, zoom: view.zoom };
     region = to;
+    setPad(to);
     if (to !== 'map') lastPlace = to;
     const v = savedViews[to] || REGIONS[to].view;
     view.rot = v.rot; view.el = v.el; view.zoom = v.zoom;
@@ -2129,7 +2163,7 @@ void main(){
     const t = layoutTarget();
     cx += (t.x - cx) * 0.08; cy += (t.y - cy) * 0.08; hh += (t.hh - hh) * 0.08; tanH += (t.tan - tanH) * 0.1;
     updateCamera();
-    if (G) {
+    if (G && !tkOn) {
       const pw = new Float32Array(16);
       planetWorld().forEach((pp, i) => pw.set(pp, i * 4));
       const ns = fillStarData();
@@ -2141,6 +2175,7 @@ void main(){
     requestAnimationFrame(frame);
   }
   function adaptQuality(dtMs) {
+    if (settings.quality !== 'auto') return;
     if (document.hidden || dtMs > 250) return;
     G.emaMs = G.emaMs * 0.95 + dtMs * 0.05;
     if (++G.frames < 90) return;
@@ -2201,7 +2236,9 @@ void main(){
     if (ev.pointerType === 'touch') return;
     const h = hit(x, y);
     fx.classList.toggle('pointing', !!h);
-    hover = h && h.kind === 'star' ? h.id : null;
+    const nh = h && h.kind === 'star' ? h.id : null;
+    if (nh && nh !== hover) { const he = entries.find((x) => x.id === nh); sfx.hover(he && he.intensity); }
+    hover = nh;
     mapHover = h && (h.kind === 'region' || h.kind === 'beacon') ? h.id : null;
     if (h && h.kind === 'star') showTip(h, x, y); else if (h && h.kind === 'planet') showTip(h, x, y); else hideTip();
   });
@@ -2229,6 +2266,7 @@ void main(){
   fx.addEventListener('dblclick', resetView);
   document.addEventListener('keydown', (ev) => {
     const tg = ev.target; if (tg && (tg.closest('input, textarea, select, [contenteditable]') || ev.metaKey || ev.ctrlKey || ev.altKey)) return;
+    if (settings.keys === 'off' && ev.key.length === 1) return;
     if (panelOpen() && panel.contains(tg)) return;
     const step = ev.shiftKey ? 0.2 : 0.07; let used = true;
     if (ev.key === 'ArrowLeft') vel.rot = -step * 14; else if (ev.key === 'ArrowRight') vel.rot = step * 14;
@@ -2262,8 +2300,44 @@ void main(){
   let currentView = null;
   const VIEWS = { form: ['#viewForm', 'Log a feeling'], detail: ['#viewDetail', 'Entry'], journal: ['#viewJournal', 'Journal'], patterns: ['#viewPatterns', 'Patterns'], about: ['#viewAbout', 'About this sky'] };
   let lastFocus = null;
+  // ---------- Settings ----------
+  function saveSettings() { try { localStorage.setItem(SETTINGS_KEY, JSON.stringify(settings)); } catch (_) {} }
+  function applyQuality() {
+    if (!G) return;
+    const lv = { high: LEVELS.length - 1, balanced: 2, low: 0 }[settings.quality];
+    if (lv != null && G.level !== lv) { G.level = lv; sizeTargets(); }
+  }
+  let wipeArmed = false;
+  function renderSettings() {
+    document.querySelectorAll('#viewAbout [data-set]').forEach((b) => b.setAttribute('aria-pressed', String(settings[b.dataset.set] === b.dataset.val)));
+    const own = entries.length;
+    $('#dataActions').innerHTML = wipeArmed
+      ? `<span class="dangerline">Delete all ${own} ${own === 1 ? 'entry' : 'entries'} from this sky?</span><button type="button" class="btn danger" id="wipeYes">Delete all</button><button type="button" class="btn ghost" id="wipeNo">Cancel</button>`
+      : `<button type="button" class="btn" id="setExport">Export JSON</button>${canWrite && own ? '<button type="button" class="btn ghost danger" id="wipe">Delete all entries</button>' : ''}`;
+    const ex = $('#setExport'); if (ex) ex.onclick = () => exportData('json');
+    const w = $('#wipe'); if (w) w.onclick = () => { wipeArmed = true; renderSettings(); };
+    const no = $('#wipeNo'); if (no) no.onclick = () => { wipeArmed = false; renderSettings(); };
+    const yes = $('#wipeYes'); if (yes) yes.onclick = async () => {
+      yes.disabled = true;
+      const copies = entries.map((e) => ({ ...e }));
+      try { for (const e of copies) await deleteEntry(e.id); }
+      catch (_) { toast('Some entries could not be deleted. Try again.'); }
+      wipeArmed = false; renderSettings(); selected = null;
+      toast(`Deleted ${copies.length} ${copies.length === 1 ? 'entry' : 'entries'}.`, { label: 'Undo', run: async () => { for (const c of copies) await restoreEntry(c); } });
+    };
+  }
+  $('#viewAbout').addEventListener('click', (ev) => {
+    const b = ev.target.closest('[data-set]'); if (!b) return;
+    settings[b.dataset.set] = b.dataset.val; saveSettings();
+    if (b.dataset.set === 'quality') applyQuality();
+    if (b.dataset.set === 'sound') setSound(b.dataset.val === 'on');
+    if (b.dataset.set === 'motion') reduceMotion = settings.motion === 'reduced' ? true : settings.motion === 'full' ? false : systemReduce;
+    renderSettings();
+  });
+
   function openPanel(v) {
     const wasOpen = panelOpen();
+    if (!wasOpen) sfx.open();
     if (!wasOpen && document.activeElement && document.activeElement !== document.body) lastFocus = document.activeElement;
     currentView = v;
     for (const [k, [sel]] of Object.entries(VIEWS)) $(sel).hidden = k !== v;
@@ -2271,6 +2345,7 @@ void main(){
     panel.classList.add('open'); panel.inert = false; $('#app').classList.add('panel-open'); $('#legend').open = false;
     if (v !== 'form') setTimeout(() => { try { $('#panelTitle').focus({ preventScroll: true }); } catch (_) {} }, 30);
     if (v === 'form') goStep(0, false);
+    if (v === 'about') { wipeArmed = false; renderSettings(); }
     if (v === 'journal') renderJournal();
     if (v === 'patterns') renderPatterns();
     if (v === 'detail') renderDetail();
@@ -2281,6 +2356,7 @@ void main(){
   }
   function closePanel() {
     const hadFocus = panel.contains(document.activeElement);
+    if (panelOpen()) sfx.close();
     panel.classList.remove('open'); panel.inert = true; currentView = null; $('#app').classList.remove('panel-open');
     if (hadFocus && lastFocus && document.contains(lastFocus)) { try { lastFocus.focus({ preventScroll: true }); } catch (_) {} }
     lastFocus = null;
@@ -2289,7 +2365,7 @@ void main(){
   }
   function panelOpen() { return panel.classList.contains('open'); }
   function select(id) {
-    selected = id; confirmDel = false; openPanel('detail');
+    selected = id; confirmDel = false; openPanel('detail'); sfx.select();
     const e = entries.find((x) => x.id === id);
     if (e && regionOf(e) !== region) travel(regionOf(e));
   }
@@ -2306,6 +2382,7 @@ void main(){
   document.addEventListener('keydown', (ev) => {
     if (ev.key !== 'Escape') return;
     if (!$('#regionMenu').hidden) { closeRegionMenu(); return; }
+    if (!$('#takeover').hidden) { stopSong(); return; }
     if (!$('#welcome').hidden) { setWelcomed(); return; }
     if (panelOpen()) { closePanel(); selected = null; }
   });
@@ -2322,7 +2399,7 @@ void main(){
       const b = ev.target.closest('.chip'); if (!b) return;
       const on = b.getAttribute('aria-pressed') !== 'true';
       if (single) el.querySelectorAll('.chip').forEach((c) => c.setAttribute('aria-pressed', 'false'));
-      b.setAttribute('aria-pressed', String(on));
+      b.setAttribute('aria-pressed', String(on)); sfx.tick();
       if (id === 'cLabel') $('#fLabel').value = on ? b.dataset.v : '';
     });
   }
@@ -2401,6 +2478,7 @@ void main(){
   function goStep(i, focus = true) {
     if (i > 0 && !$('#fLabel').value.trim()) { step = 0; renderSteps(); $('#formMsg').textContent = 'Give it a name first, even a rough one.'; $('#fLabel').focus(); return; }
     $('#formMsg').textContent = '';
+    if (i !== step) sfx.tick();
     step = clamp(i, 0, stepEls.length - 1); renderSteps();
     $('#panelBody').scrollTop = 0;
     if (focus) { const f = stepEls[step].querySelector('input[type="text"], textarea, .chip, input[type="range"], input[type="radio"]'); if (f) try { f.focus({ preventScroll: true }); } catch (_) {} }
@@ -2450,7 +2528,7 @@ void main(){
       else id = await saveEntry(data);
       editingId = null;
       resetForm();
-      toast(editing ? `Updated “${label}”.` : `Added “${label}” to the sky.`);
+      toast(editing ? `Updated “${label}”.` : `Added “${label}” to the sky.`); sfx.save();
       select(id);
     } catch (err) {
       $('#formMsg').textContent = err && err.code === 'quota_exceeded' ? 'The sky is full. Delete a few old entries, then try again.' : 'That entry did not save. Check your connection and try again.';
@@ -2579,7 +2657,7 @@ void main(){
     const dn = $('#delNo'); if (dn) dn.onclick = () => { confirmDel = false; renderDetail(); };
     const dy = $('#delYes'); if (dy) dy.onclick = async () => {
       dy.disabled = true;
-      const copy = { ...e };
+      const copy = { ...e }; sfx.remove();
       try { await deleteEntry(e.id); confirmDel = false; selected = null; closePanel(); toast(`Deleted “${copy.label || 'entry'}”.`, { label: 'Undo', run: () => restoreEntry(copy) }); }
       catch (_) { toast('That entry could not be deleted. Try again in a moment.'); dy.disabled = false; }
     };
@@ -3027,7 +3105,7 @@ ${tips.length ? `<h2>What the sky is saying</h2><ul class="ins">${tips.map((t) =
   function useElement() {
     if (audio.el) return;
     audio.el = new Audio(SONG_URL); audio.el.preload = 'auto';
-    audio.el.addEventListener('ended', () => { audio.playing = false; setPlayingUI(); });
+    audio.el.addEventListener('ended', () => { audio.playing = false; setPlayingUI(); hideTakeover(); duckScore(false); });
   }
   async function loadSong() {
     if (audio.buf || audio.el) return;
@@ -3049,12 +3127,12 @@ ${tips.length ? `<h2>What the sky is saying</h2><ul class="ins">${tips.map((t) =
       if (!audio.ctx) { const AC = window.AudioContext || window.webkitAudioContext; if (AC) audio.ctx = new AC(); }
       if (audio.ctx && audio.ctx.state === 'suspended') audio.ctx.resume();
     } catch (_) { audio.ctx = null; }
-    $('#np').hidden = false; $('#egg').classList.add('on');
+    showTakeover(); duckScore(true); $('#egg').classList.add('on');
     if (audio.ctx) await loadSong(); else useElement();
     if (audio.buf) {
       if (audio.offset >= audio.buf.duration - 0.05) audio.offset = 0;
       const src = audio.ctx.createBufferSource(); src.buffer = audio.buf; src.connect(audio.an);
-      src.onended = () => { if (audio.src === src) { audio.src = null; audio.playing = false; audio.offset = 0; setPlayingUI(); } };
+      src.onended = () => { if (audio.src === src) { audio.src = null; audio.playing = false; audio.offset = 0; setPlayingUI(); hideTakeover(); duckScore(false); } };
       src.start(0, audio.offset); audio.startAt = audio.ctx.currentTime - audio.offset; audio.src = src; audio.playing = true;
     } else if (audio.el) {
       try { await audio.el.play(); audio.playing = true; } catch (_) { audio.playing = false; toast('The track could not start. Tap the little star again.'); }
@@ -3067,8 +3145,146 @@ ${tips.length ? `<h2>What the sky is saying</h2><ul class="ins">${tips.map((t) =
     else if (audio.el) { audio.el.pause(); audio.playing = false; }
     setPlayingUI();
   }
-  function stopSong() { pauseSong(); audio.offset = 0; if (audio.el) audio.el.currentTime = 0; $('#np').hidden = true; }
-  $('#egg').addEventListener('click', () => (audio.playing ? pauseSong() : playSong()));
+  function stopSong() { pauseSong(); audio.offset = 0; if (audio.el) audio.el.currentTime = 0; $('#np').hidden = true; hideTakeover(); duckScore(false); }
+  $('#egg').addEventListener('click', () => (audio.playing || tkOn ? stopSong() : playSong()));
+  $('#tkStop').addEventListener('click', () => { stopSong(); $('#egg').focus(); });
+  let tkOn = false;
+  function showTakeover() {
+    const t = $('#takeover'), img = $('#tkImg');
+    if (!img.getAttribute('src')) { img.setAttribute('src', 'keys.jpg'); t.querySelector('.tk-bg').style.backgroundImage = 'url(keys.jpg)'; }
+    tkOn = true; t.hidden = false; requestAnimationFrame(() => t.classList.add('show'));
+    setTimeout(() => { try { $('#tkStop').focus(); } catch (_) {} }, 60);
+  }
+  function hideTakeover() {
+    const t = $('#takeover'); tkOn = false; t.classList.remove('show');
+    setTimeout(() => { if (!tkOn) t.hidden = true; }, 460);
+  }
+
+  // ---------- Sound design: a generative score and interaction sounds ----------
+  const snd = { on: settings.sound !== 'off', started: false, out: null, amb: null, fx: null, verb: null, pad: null, padRegion: null, sparkT: null, lastHover: 0 };
+  const midi = (n) => 440 * Math.pow(2, (n - 69) / 12);
+  const CHORDS = { horizon: [26, 33, 38, 41, 45], ember: [45, 52, 57, 61, 64, 69], tide: [48, 55, 60, 64, 67, 72], drift: [43, 50, 55, 58, 62], map: [38, 45, 50, 57, 62, 69] };
+  const SCALES = { horizon: [62, 65, 69, 70, 74], ember: [69, 71, 73, 76, 78, 81], tide: [72, 74, 76, 79, 81, 84], drift: [67, 70, 74, 77, 79], map: [69, 74, 76, 81, 86] };
+  function ensureCtx() {
+    try { if (!audio.ctx) { const AC = window.AudioContext || window.webkitAudioContext; if (AC) audio.ctx = new AC(); } } catch (_) { audio.ctx = null; }
+    return audio.ctx;
+  }
+  function makeVerb(ctx) {
+    const len = Math.floor(ctx.sampleRate * 3.2), buf = ctx.createBuffer(2, len, ctx.sampleRate);
+    for (let ch = 0; ch < 2; ch++) { const d = buf.getChannelData(ch); for (let i = 0; i < len; i++) d[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / len, 2.6); }
+    const c = ctx.createConvolver(); c.buffer = buf; return c;
+  }
+  function startSound() {
+    if (snd.started || !snd.on) return;
+    const ctx = ensureCtx(); if (!ctx) return;
+    try {
+      if (ctx.state === 'suspended') ctx.resume();
+      snd.out = ctx.createGain(); snd.out.gain.value = 0; snd.out.connect(ctx.destination);
+      snd.verb = makeVerb(ctx); const wet = ctx.createGain(); wet.gain.value = 0.5; snd.verb.connect(wet); wet.connect(snd.out);
+      snd.amb = ctx.createGain(); snd.amb.gain.value = 1; snd.amb.connect(snd.out); snd.amb.connect(snd.verb);
+      snd.fx = ctx.createGain(); snd.fx.gain.value = 1; snd.fx.connect(snd.out); snd.fx.connect(snd.verb);
+      snd.started = true;
+      snd.out.gain.setTargetAtTime(audio.playing ? 0 : 0.9, ctx.currentTime, 1.4);
+      setPad(region); scheduleSpark();
+    } catch (_) { snd.started = false; }
+  }
+  function setPad(key) {
+    if (!snd.started || snd.padRegion === key) return;
+    const ctx = audio.ctx, now = ctx.currentTime;
+    snd.padRegion = key;
+    const old = snd.pad;
+    if (old) { old.gain.gain.setTargetAtTime(0, now, 1.1); setTimeout(() => old.oscs.forEach((o) => { try { o.stop(); } catch (_) {} }), 7000); }
+    const g = ctx.createGain(); g.gain.value = 0;
+    const lp = ctx.createBiquadFilter(); lp.type = 'lowpass'; lp.Q.value = 0.4;
+    lp.frequency.value = { horizon: 480, drift: 680, map: 900 }[key] || 1150;
+    const lfo = ctx.createOscillator(); lfo.frequency.value = 0.03; const lfoG = ctx.createGain(); lfoG.gain.value = lp.frequency.value * 0.35;
+    lfo.connect(lfoG); lfoG.connect(lp.frequency); lfo.start();
+    lp.connect(g); g.connect(snd.amb);
+    const oscs = [lfo];
+    CHORDS[key].forEach((n, i) => {
+      for (const det of [-6, 5]) {
+        const o = ctx.createOscillator(); o.type = i === 0 ? 'sine' : 'triangle'; o.frequency.value = midi(n); o.detune.value = det + (Math.random() - 0.5) * 4;
+        const vg = ctx.createGain(); const base = (i === 0 ? 0.08 : 0.028) / (1 + i * 0.15); vg.gain.value = base;
+        const br = ctx.createOscillator(); br.frequency.value = 0.035 + Math.random() * 0.06; const bg = ctx.createGain(); bg.gain.value = base * 0.6;
+        br.connect(bg); bg.connect(vg.gain); br.start();
+        o.connect(vg); vg.connect(lp); o.start(); oscs.push(o, br);
+      }
+    });
+    g.gain.setTargetAtTime(0.55, now + 0.4, 2.2);
+    snd.pad = { gain: g, oscs };
+  }
+  function bell(freq, t, vol, dur) {
+    const ctx = audio.ctx;
+    const o = ctx.createOscillator(); o.type = 'sine'; o.frequency.value = freq;
+    const o2 = ctx.createOscillator(); o2.type = 'sine'; o2.frequency.value = freq * 2.756;
+    const g = ctx.createGain(); g.gain.setValueAtTime(0, t); g.gain.linearRampToValueAtTime(vol, t + 0.008); g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+    const g2 = ctx.createGain(); g2.gain.value = 0.16;
+    o.connect(g); o2.connect(g2); g2.connect(g); g.connect(snd.fx);
+    o.start(t); o2.start(t); o.stop(t + dur + 0.1); o2.stop(t + dur + 0.1);
+  }
+  function scheduleSpark() {
+    clearTimeout(snd.sparkT);
+    snd.sparkT = setTimeout(() => {
+      if (sfx.ok() && !document.hidden) {
+        const sc = SCALES[snd.padRegion || 'horizon'], t = audio.ctx.currentTime + 0.05;
+        bell(midi(sc[Math.floor(Math.random() * sc.length)]), t, 0.02, 3.6);
+        if (Math.random() < 0.4) bell(midi(sc[Math.floor(Math.random() * sc.length)]), t + 0.45, 0.014, 3.6);
+      }
+      scheduleSpark();
+    }, 3500 + Math.random() * 5500);
+  }
+  function duckScore(down) {
+    if (!snd.started) return;
+    snd.out.gain.setTargetAtTime(down || !snd.on ? 0 : 0.9, audio.ctx.currentTime, down ? 0.25 : 1.2);
+  }
+  function setSound(on, init) {
+    snd.on = on; settings.sound = on ? 'on' : 'off';
+    if (!init) { saveSettings(); if (on && !snd.started) startSound(); else duckScore(audio.playing); }
+    $('#sndLabel').textContent = on ? 'Sound on' : 'Sound off';
+    $('#sndBtn').setAttribute('aria-pressed', String(on));
+    $('#sndBtn').setAttribute('aria-label', on ? 'Sound is on. Turn it off' : 'Sound is off. Turn it on');
+    if (currentView === 'about') renderSettings();
+  }
+  const sfx = {
+    ok() { return snd.started && snd.on && !audio.playing && audio.ctx; },
+    hover(I) {
+      if (!this.ok()) return; const n = performance.now(); if (n - snd.lastHover < 140) return; snd.lastHover = n;
+      const sc = SCALES[snd.padRegion || 'horizon']; bell(midi(sc[clamp(Math.round((I || 5) / 2.2), 0, sc.length - 1)] + 12), audio.ctx.currentTime, 0.012, 0.9);
+    },
+    select() { if (!this.ok()) return; const t = audio.ctx.currentTime, sc = SCALES[snd.padRegion || 'horizon']; bell(midi(sc[0]), t, 0.045, 2.2); bell(midi(sc[2]), t + 0.09, 0.035, 2.2); },
+    tick() {
+      if (!this.ok()) return; const ctx = audio.ctx, t = ctx.currentTime;
+      const o = ctx.createOscillator(); o.type = 'triangle'; o.frequency.setValueAtTime(1700, t); o.frequency.exponentialRampToValueAtTime(900, t + 0.04);
+      const g = ctx.createGain(); g.gain.setValueAtTime(0.02, t); g.gain.exponentialRampToValueAtTime(0.0001, t + 0.06);
+      o.connect(g); g.connect(snd.fx); o.start(t); o.stop(t + 0.08);
+    },
+    whoosh(dur, from, to, vol) {
+      if (!this.ok()) return; const ctx = audio.ctx, t = ctx.currentTime;
+      const len = Math.ceil(ctx.sampleRate * dur), buf = ctx.createBuffer(1, len, ctx.sampleRate), d = buf.getChannelData(0);
+      for (let i = 0; i < len; i++) d[i] = Math.random() * 2 - 1;
+      const s = ctx.createBufferSource(); s.buffer = buf;
+      const f = ctx.createBiquadFilter(); f.type = 'bandpass'; f.Q.value = 1.1;
+      f.frequency.setValueAtTime(from, t); f.frequency.exponentialRampToValueAtTime(to, t + dur * 0.5); f.frequency.exponentialRampToValueAtTime(Math.max(60, from * 0.8), t + dur);
+      const g = ctx.createGain(); g.gain.setValueAtTime(0, t); g.gain.linearRampToValueAtTime(vol, t + dur * 0.45); g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+      s.connect(f); f.connect(g); g.connect(snd.fx); s.start(t); s.stop(t + dur + 0.05);
+    },
+    warp() {
+      this.whoosh(2.3, 120, 3200, 0.08);
+      if (!this.ok()) return; const ctx = audio.ctx, t = ctx.currentTime;
+      const o = ctx.createOscillator(); o.type = 'sine'; o.frequency.setValueAtTime(45, t); o.frequency.exponentialRampToValueAtTime(92, t + 1.1); o.frequency.exponentialRampToValueAtTime(40, t + 2.3);
+      const g = ctx.createGain(); g.gain.setValueAtTime(0, t); g.gain.linearRampToValueAtTime(0.07, t + 1.0); g.gain.exponentialRampToValueAtTime(0.0001, t + 2.4);
+      o.connect(g); g.connect(snd.fx); o.start(t); o.stop(t + 2.5);
+    },
+    open() { this.whoosh(0.35, 500, 1600, 0.016); },
+    close() { this.whoosh(0.3, 1400, 500, 0.012); },
+    save() { if (!this.ok()) return; const t = audio.ctx.currentTime, sc = SCALES[snd.padRegion || 'horizon']; [0, 2, 4].forEach((k, i) => bell(midi(sc[Math.min(k, sc.length - 1)]), t + i * 0.11, 0.04, 2.6)); },
+    remove() { if (!this.ok()) return; const t = audio.ctx.currentTime, sc = SCALES[snd.padRegion || 'horizon']; bell(midi(sc[2] - 12), t, 0.035, 1.6); bell(midi(sc[0] - 12), t + 0.12, 0.035, 2); },
+  };
+  $('#sndBtn').addEventListener('click', () => setSound(!snd.on));
+  const firstGesture = () => { if (audio.ctx && audio.ctx.state === 'suspended') audio.ctx.resume(); if (snd.on && !snd.started) startSound(); };
+  document.addEventListener('pointerdown', firstGesture, true);
+  document.addEventListener('keydown', firstGesture, true);
+  setSound(snd.on, true);
   $('#npToggle').addEventListener('click', () => (audio.playing ? pauseSong() : playSong()));
   $('#npClose').addEventListener('click', stopSong);
   function updateAudio() {
@@ -3088,6 +3304,12 @@ ${tips.length ? `<h2>What the sky is saying</h2><ul class="ins">${tips.map((t) =
     } else eqBars.forEach((bEl) => { bEl.style.height = '12%'; });
     if (reduceMotion) target *= 0.3;
     pulse += (target - pulse) * (target > pulse ? 0.5 : 0.07);
+    if (tkOn) {
+      const tt = audioTime(), dur = audioDur();
+      $('#tkTime').textContent = dur ? `${fmtClock(tt)} / ${fmtClock(dur)}` : 'loading…';
+      $('#tkFill').style.width = dur ? Math.min(100, (tt / dur) * 100) + '%' : '0%';
+      $('#tkImg').style.transform = `scale(${(1 + pulse * 0.05).toFixed(4)})`;
+    }
     if (!$('#np').hidden) {
       const tt = audioTime(), dur = audioDur();
       $('#npTime').textContent = dur ? `${fmtClock(tt)} / ${fmtClock(dur)}` : (audio.playing ? fmtClock(tt) : 'loading…');
@@ -3108,6 +3330,7 @@ ${tips.length ? `<h2>What the sky is saying</h2><ul class="ins">${tips.map((t) =
       G = null; glCanvas.hidden = true; fx.classList.add('flat'); buildFallbackBg();
     }
     glPending = false; fade = reduceMotion ? 0.6 : 0;
+    applyQuality();
     if (intro) intro.t0 = performance.now();
     $('#loader').classList.add('done'); setTimeout(() => { $('#loader').hidden = true; }, 900);
     setTimeout(() => { if (!maybeWelcome() && region === 'horizon' && !trav) showArrival('horizon'); showHint(); }, reduceMotion ? 400 : 3200);
