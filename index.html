@@ -26,7 +26,7 @@
   --void: #030304;
   --ink: #e9e6df;
   --dim: #9b978f;
-  --faint: #66635d;
+  --faint: #858179;
   --line: rgba(233, 230, 223, .09);
   --line-2: rgba(233, 230, 223, .17);
   --surface: #0b0b0d;
@@ -84,7 +84,19 @@ button, input, textarea { font: inherit; color: inherit; }
 .linkbtn { background: none; border: 0; padding: 0; color: var(--dim); text-decoration: underline; text-decoration-color: var(--line-2); text-underline-offset: 3px; cursor: pointer; font-size: inherit; }
 .linkbtn:hover { color: var(--ink); text-decoration-color: currentColor; }
 
-.loc { display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 9px; margin: 10px 0 0; font-size: 13.5px; font-weight: 500; }
+.locwrap { position: relative; display: block; margin-top: 8px; width: fit-content; max-width: 100%; }
+.loc { display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 9px; padding: 4px 0; background: none; border: 0; color: var(--ink); font-size: 13.5px; font-weight: 500; text-align: left; cursor: pointer; text-shadow: inherit; }
+.loc .ln { text-decoration: underline; text-decoration-color: var(--line-2); text-underline-offset: 3px; }
+.loc:hover .ln { text-decoration-color: currentColor; }
+.loc .chev { width: 9px; height: 9px; color: var(--dim); align-self: center; flex: none; }
+.regions { position: absolute; z-index: 9; top: calc(100% + 6px); left: 0; width: min(320px, calc(100vw - 32px)); padding: 4px; display: grid; background: var(--sheet); border: 1px solid var(--line-2); border-radius: var(--r); text-shadow: none; }
+.regions button { display: grid; grid-template-columns: 10px 1fr auto; column-gap: 12px; row-gap: 1px; align-items: center; padding: 9px 10px; border: 0; border-radius: 4px; background: none; text-align: left; cursor: pointer; }
+.regions button:hover, .regions button:focus-visible { background: var(--hover); }
+.regions button.cur { background: rgba(233,230,223,.07); }
+.regions .sw { grid-row: 1 / span 2; width: 7px; height: 7px; border-radius: 50%; background: var(--c); }
+.regions .rn { font-size: 13px; font-weight: 500; }
+.regions .rq { grid-column: 2; font-size: 12px; color: var(--dim); }
+.regions .rc { grid-column: 3; grid-row: 1 / span 2; font-family: var(--f-mono); font-size: 12px; color: var(--dim); }
 .loc .sw { width: 7px; height: 7px; border-radius: 50%; background: var(--c); align-self: center; box-shadow: 0 0 8px var(--c); }
 .loc i { font-style: normal; font-weight: 400; color: var(--dim); }
 .arrive { position: absolute; z-index: 4; left: max(24px, env(safe-area-inset-left, 0px)); bottom: calc(env(safe-area-inset-bottom, 0px) + 62px); max-width: 32ch; pointer-events: none; opacity: 0; transform: translateY(10px); transition: opacity .9s ease, transform 1.2s cubic-bezier(.2,.8,.2,1); text-shadow: 0 2px 20px rgba(0,0,0,.9); }
@@ -93,6 +105,34 @@ button, input, textarea { font: inherit; color: inherit; }
 .arrive h2 { margin: 0; font-family: var(--f-display); font-weight: 400; font-size: clamp(42px, 6vw, 76px); line-height: .92; letter-spacing: -.012em; }
 .arrive-b { margin: 14px 0 0; color: var(--dim); font-size: 14px; line-height: 1.6; }
 #app.panel-open .arrive { opacity: 0; }
+.welcome { position: absolute; z-index: 5; left: max(24px, env(safe-area-inset-left, 0px)); bottom: calc(env(safe-area-inset-bottom, 0px) + 56px); width: min(400px, calc(100% - 48px)); padding: 22px 22px 18px; background: var(--sheet); border: 1px solid var(--line-2); border-radius: var(--r); }
+.welcome h2 { margin: 0 0 16px; font-family: var(--f-display); font-weight: 400; font-size: 28px; line-height: 1.05; }
+.welcome ol { margin: 0; padding: 0; list-style: none; counter-reset: w; display: grid; gap: 12px; }
+.welcome li { counter-increment: w; display: grid; grid-template-columns: 20px 1fr; gap: 10px; font-size: 13.5px; line-height: 1.5; color: var(--dim); }
+.welcome li::before { content: counter(w); font-family: var(--f-mono); font-size: 12px; color: var(--accent); padding-top: 2px; }
+.welcome li b { color: var(--ink); font-weight: 600; }
+.w-note { margin: 16px 0 0; font-size: 12.5px; color: var(--faint); }
+.w-actions { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 16px; }
+#app.panel-open .welcome { display: none; }
+.stepper-head { display: grid; gap: 8px; }
+.step-meta { display: flex; justify-content: space-between; gap: 12px; font-size: 12.5px; color: var(--dim); }
+.steps { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(8, 1fr); gap: 4px; }
+.steps button { display: block; width: 100%; padding: 6px 0; border: 0; background: none; cursor: pointer; }
+.steps button::before { content: ""; display: block; height: 3px; border-radius: 2px; background: var(--line-2); transition: background-color .2s; }
+.steps button.done::before { background: rgba(239,226,198,.45); }
+.steps button[aria-current="step"]::before { background: var(--accent); }
+.steps button:hover::before { background: rgba(239,226,198,.7); }
+#logForm.stepper fieldset.param { display: none; border-top: 0; padding-top: 2px; }
+#logForm.stepper fieldset.param.cur { display: grid; animation: viewIn .3s ease; }
+#logForm.stepper fieldset.param legend { font-family: var(--f-display); font-weight: 400; font-size: 24px; margin-bottom: 4px; }
+.q b { color: var(--ink); font-weight: 600; }
+.form-foot .spacer { flex: 1; }
+.form-foot .form-msg { flex-basis: 100%; margin: 0; }
+.form-foot .form-msg:empty { display: none; }
+.btn:disabled { opacity: .4; cursor: default; }
+.search { width: 100%; height: 36px; padding: 0 12px; background: rgba(233,230,223,.03); border: 1px solid var(--line-2); border-radius: var(--r); color: var(--ink); font-size: 14px; }
+.search:focus { outline: none; border-color: rgba(239,226,198,.55); }
+.search::placeholder { color: var(--faint); }
 button.tag { font: inherit; font-size: 11px; line-height: 1; background: none; cursor: pointer; }
 .tag.place { color: var(--ink); border-color: var(--c); }
 .tag.place:hover { background: var(--hover); }
@@ -122,7 +162,7 @@ button.tag { font: inherit; font-size: 11px; line-height: 1; background: none; c
 .legend ul { position: absolute; left: 0; bottom: calc(100% + 12px); width: min(340px, calc(100vw - 48px)); list-style: none; margin: 0; padding: 14px 16px; display: grid; gap: 9px; background: var(--sheet); border: 1px solid var(--line-2); border-radius: var(--r); color: var(--dim); font-size: 12.5px; line-height: 1.4; }
 .legend li { display: grid; grid-template-columns: 22px 1fr; gap: 12px; align-items: center; }
 .ico { width: 22px; height: 14px; display: block; }
-.readout { font-family: var(--f-mono); font-size: 11px; color: var(--faint); text-align: right; font-variant-numeric: tabular-nums; text-shadow: 0 1px 8px rgba(0,0,0,.8); display: flex; gap: 14px; }
+.readout { font-size: 12.5px; color: var(--dim); text-align: right; text-shadow: 0 1px 8px rgba(0,0,0,.8); }
 .readout b { color: var(--dim); font-weight: 400; margin-right: 4px; }
 
 /* ---------- small surfaces ---------- */
@@ -284,6 +324,10 @@ dl.params.keys > div { grid-template-columns: 84px 1fr; }
   .panel-head::before { content: ""; position: absolute; left: 50%; top: 6px; width: 36px; height: 4px; margin-left: -18px; border-radius: 2px; background: var(--line-2); }
   .panel-body { padding: 16px max(16px, env(safe-area-inset-right, 0px)) calc(env(safe-area-inset-bottom, 0px) + 24px) max(16px, env(safe-area-inset-left, 0px)); }
   #app.panel-open .row-bottom, #app.panel-open .brand { display: none; }
+  #viewForm > .lede { display: none; }
+  .panel { height: 74%; }
+  .welcome { left: 16px; right: 16px; width: auto; bottom: calc(env(safe-area-inset-bottom, 0px) + 16px); padding: 18px; }
+  .welcome h2 { font-size: 24px; }
   .replay { bottom: calc(env(safe-area-inset-bottom, 0px) + 16px); }
   dl.params > div { grid-template-columns: 1fr; gap: 3px; }
 }
@@ -304,15 +348,15 @@ dl.params.keys > div { grid-template-columns: 84px 1fr; }
     <div class="row-top">
       <header class="brand">
         <h1><svg viewBox="0 0 24 24" aria-hidden="true"><ellipse cx="12" cy="13" rx="11" ry="3" fill="none" stroke="#f2b37a" stroke-width="1.3"/><path d="M5.6 12a6.4 5.6 0 0 1 12.8 0" fill="none" stroke="#ffe2bd" stroke-width="1.1"/><circle cx="12" cy="12" r="4.2" fill="#000" stroke="#fff1dc" stroke-width=".7"/></svg>Inner Orrery</h1>
-        <p class="loc" id="loc"></p>
-        <p class="stats" id="stats" aria-live="polite"><span><b>–</b> signals</span></p>
+        <div class="locwrap hit"><button class="loc" id="loc" type="button" aria-haspopup="menu" aria-expanded="false"></button><div class="regions" id="regionMenu" role="menu" hidden></div></div>
+        <p class="stats" id="stats" aria-live="polite"><span><b>–</b> entries</span></p>
         <p class="note hit" id="note">Loading your sky…</p>
       </header>
       <div class="ctl-col">
       <nav class="controls hit" aria-label="Sky controls">
         <button class="btn primary" id="btnLog" type="button" hidden>
           <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M8 3v10M3 8h10" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" fill="none"/></svg>
-          <span>Log<span class="lbl-long"> a signal</span></span>
+          <span>Log<span class="lbl-long"> a feeling</span></span>
         </button>
         <div class="toolbar">
         <button class="btn" id="btnMap" type="button" aria-pressed="false" aria-label="Star map"><svg viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="8" r="6.2" fill="none" stroke="currentColor" stroke-width="1.1"/><path d="M1.8 8h12.4M8 1.8v12.4" stroke="currentColor" stroke-width=".9" stroke-dasharray="1.4 1.6"/><circle cx="11" cy="5" r="1.2" fill="currentColor"/><circle cx="5.2" cy="10.6" r="1" fill="currentColor"/></svg><span class="lbl-long">Star map</span></button>
@@ -346,7 +390,7 @@ dl.params.keys > div { grid-template-columns: 84px 1fr; }
           <li><svg class="ico" viewBox="0 0 22 14" aria-hidden="true"><circle cx="11" cy="7" r="1.8" fill="#ece8df"/><path d="M6.2 4.6A5.4 5.4 0 0 1 9 2M15.6 4.4A5.4 5.4 0 0 1 16.4 8.6M13 11.9A5.4 5.4 0 0 1 7.4 11" fill="none" stroke="#ff8f5e" stroke-width="1.3"/></svg><span>A flickering corona marks a misread: too strong, wrong label or wrong target.</span></li>
           <li><svg class="ico" viewBox="0 0 22 14" aria-hidden="true"><path d="M2 11 11 3 20 9" stroke="#9a978f" stroke-width=".9" fill="none"/><circle cx="2" cy="11" r="1.6" fill="#ff7652"/><circle cx="11" cy="3" r="1.6" fill="#ffcc5c"/><circle cx="20" cy="9" r="1.6" fill="#6fcfff"/></svg><span>Lines join entries that share a label, body signature, context or trigger.</span></li>
           <li><svg class="ico" viewBox="0 0 22 14" aria-hidden="true"><path d="M3 12 Q11 -2 19 12" stroke="#5f5d58" stroke-width="1" fill="none" stroke-dasharray="2 2"/><circle cx="7" cy="5.6" r="1.5" fill="#ece8df"/><circle cx="11" cy="3.6" r="1.5" fill="#ece8df"/><circle cx="15" cy="5.6" r="1.5" fill="#ece8df"/></svg><span>Feelings with the same name fall into resonance and orbit together.</span></li>
-          <li><svg class="ico" viewBox="0 0 22 14" aria-hidden="true"><path d="M20 7 Q14 1 10 6 T4 7" stroke="#5f5d58" stroke-width="1" fill="none"/><circle cx="4" cy="7" r="2.2" fill="#000" stroke="#ffb46e" stroke-width=".8"/></svg><span>Older signals sink slowly inward. History becomes baseline.</span></li>
+          <li><svg class="ico" viewBox="0 0 22 14" aria-hidden="true"><path d="M20 7 Q14 1 10 6 T4 7" stroke="#5f5d58" stroke-width="1" fill="none"/><circle cx="4" cy="7" r="2.2" fill="#000" stroke="#ffb46e" stroke-width=".8"/></svg><span>Older entries sink slowly inward. History becomes baseline.</span></li>
         </ul>
       </details>
       <button class="linkbtn" id="btnAbout" type="button">About</button>
@@ -362,23 +406,24 @@ dl.params.keys > div { grid-template-columns: 84px 1fr; }
   <div class="empty" id="empty" hidden>
     <h2>An empty sky</h2>
     <p id="emptyText">Log the first thing you felt today. It becomes a star, and every entry after it finds its orbit and its neighbours.</p>
-    <button class="btn primary" id="btnEmptyLog" type="button">Log a signal</button>
+    <button class="btn primary" id="btnEmptyLog" type="button">Log a feeling</button>
   </div>
 
   <aside class="panel" id="panel" inert aria-labelledby="panelTitle">
     <div class="panel-head">
-      <h2 id="panelTitle" tabindex="-1">Log a signal</h2>
+      <h2 id="panelTitle" tabindex="-1">Log a feeling</h2>
       <button class="icon-btn" id="btnClose" type="button" aria-label="Close panel">
         <svg viewBox="0 0 16 16" width="13" height="13" aria-hidden="true"><path d="M3 3l10 10M13 3 3 13" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
       </button>
     </div>
     <div class="panel-body" id="panelBody">
       <section class="view" id="viewForm" hidden>
-        <p class="lede">Seven parameters. Only the label is required, so fill in whatever you can actually notice.</p>
+        <p class="lede">Eight short questions, one at a time. Only the first one is required, and you can save at any step.</p>
+        <div class="stepper-head"><div class="step-meta" id="stepMeta"></div><ol class="steps" id="steps" aria-label="Steps"></ol></div>
         <form id="logForm" novalidate>
-          <fieldset class="param">
-            <legend><span class="idx">1/7</span> Label</legend>
-            <p class="q">What would you call it right now?</p>
+          <fieldset class="param" data-name="How it felt" data-param="Label">
+            <legend>How it felt</legend>
+            <p class="q">What would you call it? Pick one or type your own word.</p>
             <input id="fLabel" type="text" list="labelList" autocomplete="off" maxlength="40" placeholder="anxious, proud, restless…">
             <datalist id="labelList"></datalist>
             <div class="chips" id="cLabel"></div>
@@ -395,40 +440,40 @@ dl.params.keys > div { grid-template-columns: 84px 1fr; }
             <div class="when"><label for="fWhen">When did it happen?</label><input id="fWhen" type="datetime-local"></div>
           </fieldset>
 
-          <fieldset class="param">
-            <legend>Bead mix</legend>
-            <p class="q">How loud was each bead in this moment? The mix sets the star's color.</p>
+          <fieldset class="param" data-name="What spoke loudest" data-param="Body, cognition, emotion">
+            <legend>What spoke loudest</legend>
+            <p class="q">The three beads of the kaleidoscope. <b>Body</b> is physical sensation, <b>cognition</b> is your thoughts and the story you told yourself, <b>emotion</b> is the feeling itself. Their mix sets the star's color.</p>
             <div class="bead-row" style="--c: var(--body)"><label class="nm" for="wBody">Body</label><input id="wBody" type="range" min="0" max="10" value="5"><output id="oBody">5</output></div>
             <div class="bead-row" style="--c: var(--mind)"><label class="nm" for="wMind">Cognition</label><input id="wMind" type="range" min="0" max="10" value="5"><output id="oMind">5</output></div>
             <div class="bead-row" style="--c: var(--heart)"><label class="nm" for="wHeart">Emotion</label><input id="wHeart" type="range" min="0" max="10" value="5"><output id="oHeart">5</output></div>
             <div class="mix-preview"><span class="mix-star" id="mixStar"></span><span id="mixText">Balanced: all three beads equally loud.</span></div>
           </fieldset>
 
-          <fieldset class="param">
-            <legend><span class="idx">2/7</span> Bodily signature</legend>
-            <p class="q">What did your body do before you had words for it?</p>
+          <fieldset class="param" data-name="In your body" data-param="Bodily signature">
+            <legend>In your body</legend>
+            <p class="q">What did your body do, maybe before you had words for it? Pick any that fit.</p>
             <div class="chips" id="cBody"></div>
             <input id="fBodyNote" type="text" maxlength="160" placeholder="Where it sat, how it moved…">
           </fieldset>
 
-          <fieldset class="param">
-            <legend><span class="idx">3/7</span> Trigger</legend>
-            <p class="q">What happened right before?</p>
+          <fieldset class="param" data-name="What set it off" data-param="Trigger">
+            <legend>What set it off</legend>
+            <p class="q">What happened right before? A sentence is plenty.</p>
             <textarea id="fTrigger" maxlength="500" placeholder="My group chat went quiet after I sent the draft."></textarea>
           </fieldset>
 
-          <fieldset class="param">
-            <legend><span class="idx">4/7</span> Context</legend>
-            <p class="q">Where were you, and who was there?</p>
+          <fieldset class="param" data-name="Where you were" data-param="Context">
+            <legend>Where you were</legend>
+            <p class="q">Where were you, and who was around? The same body feeling can mean different things in different rooms.</p>
             <div class="chips" id="cContext"></div>
             <input id="fContextNote" type="text" maxlength="160" placeholder="What was at stake in that room…">
           </fieldset>
 
-          <fieldset class="param">
-            <legend><span class="idx">5/7</span> History &amp; baseline</legend>
-            <p class="q">What state were you already in?</p>
+          <fieldset class="param" data-name="What you brought in" data-param="History and baseline">
+            <legend>What you brought in</legend>
+            <p class="q">What state were you already in before it happened?</p>
             <div class="chips" id="cBaseline"></div>
-            <p class="q">Has this signal shown up before?</p>
+            <p class="q">Has this feeling shown up before?</p>
             <div class="seg" role="radiogroup" aria-label="How often this happens">
               <input type="radio" name="freq" id="fq1" value="first"><label for="fq1">First time</label>
               <input type="radio" name="freq" id="fq2" value="sometimes"><label for="fq2">Sometimes</label>
@@ -436,9 +481,9 @@ dl.params.keys > div { grid-template-columns: 84px 1fr; }
             </div>
           </fieldset>
 
-          <fieldset class="param">
-            <legend><span class="idx">6/7</span> Failure mode</legend>
-            <p class="q">Looking back, did the read fit the situation?</p>
+          <fieldset class="param" data-name="Did your read fit?" data-param="Failure mode">
+            <legend>Did your read fit?</legend>
+            <p class="q">Looking back, did the feeling match what was actually going on?</p>
             <div class="seg" role="radiogroup" aria-label="Read check">
               <input type="radio" name="read" id="rd1" value="fit"><label for="rd1">Fit the moment</label>
               <input type="radio" name="read" id="rd2" value="too-strong"><label for="rd2">Too strong</label>
@@ -449,9 +494,9 @@ dl.params.keys > div { grid-template-columns: 84px 1fr; }
             <textarea id="fReflect" maxlength="600" placeholder="What was body, what was story, and what might have distorted it?"></textarea>
           </fieldset>
 
-          <fieldset class="param">
-            <legend><span class="idx">7/7</span> Regulation</legend>
-            <p class="q">What did you do with it?</p>
+          <fieldset class="param" data-name="What helped" data-param="Regulation">
+            <legend>What helped</legend>
+            <p class="q">What did you do with it, and how strong was it afterwards?</p>
             <div class="chips" id="cReg"></div>
             <input id="fRegNote" type="text" maxlength="200" placeholder="What actually helped, or didn't">
             <div class="rng">
@@ -461,8 +506,11 @@ dl.params.keys > div { grid-template-columns: 84px 1fr; }
           </fieldset>
 
           <div class="form-foot">
+            <button class="btn ghost" type="button" id="btnBack">Back</button>
+            <button class="btn" type="button" id="btnNext">Next</button>
+            <span class="spacer"></span>
             <button class="btn primary" type="submit" id="btnSave">Add to the sky</button>
-            <span class="form-msg" id="formMsg" role="status"></span>
+            <p class="form-msg" id="formMsg" role="status"></p>
           </div>
         </form>
       </section>
@@ -479,12 +527,12 @@ dl.params.keys > div { grid-template-columns: 84px 1fr; }
             <div><dt>Orbit</dt><dd>Intensity sets the distance. The stronger the feeling, the closer it falls toward the horizon.</dd></div>
             <div><dt>Resonance</dt><dd>Feelings with the same label orbit together, so repeated patterns line up as you log more.</dd></div>
             <div><dt>Lines</dt><dd>Entries that share a body signature, context, baseline or trigger words connect into constellations.</dd></div>
-            <div><dt>Drift</dt><dd>Older signals sink slowly inward. History becomes baseline.</dd></div>
+            <div><dt>Drift</dt><dd>Older entries sink slowly inward. History becomes baseline.</dd></div>
             <div><dt>Marks</dt><dd>A ring means you regulated it. A flickering corona means the read misfired.</dd></div>
           </dl>
         </div>
         <div><h4>Four regions of space</h4>
-          <p class="lede">Every feeling is placed on two dimensions psychologists use to map emotion: valence, from unpleasant to pleasant, and arousal, from calm to intense. Together they form Russell's circumplex model of affect. Each quarter of it is a different place in space. Open the Star map to see every signal plotted on those two axes, then travel to a region.</p>
+          <p class="lede">Every feeling is placed on two dimensions psychologists use to map emotion: valence, from unpleasant to pleasant, and arousal, from calm to intense. Together they form Russell's circumplex model of affect. Each quarter of it is a different place in space. Open the Star map to see every entry plotted on those two axes, then travel to a region.</p>
           <dl class="params">
             <div><dt>The Horizon</dt><dd>Intense and unpleasant. A black hole.</dd></div>
             <div><dt>Ember Nebula</dt><dd>Intense and pleasant. A stellar nursery lit by a young cluster.</dd></div>
@@ -512,6 +560,16 @@ dl.params.keys > div { grid-template-columns: 84px 1fr; }
     </div>
   </aside>
 
+  <section class="welcome" id="welcome" hidden aria-labelledby="welcomeTitle">
+    <h2 id="welcomeTitle">A journal you can fly through</h2>
+    <ol>
+      <li><span><b>Log a feeling.</b> A few short questions about what your body, your thoughts and the emotion itself were doing. Only the name is required.</span></li>
+      <li><span><b>It becomes a star.</b> How pleasant and how intense it felt decides which region of space it settles in.</span></li>
+      <li><span><b>Watch patterns form.</b> Entries that share a body sensation, a place or a trigger link into constellations, and Patterns shows how the three interact.</span></li>
+    </ol>
+    <p class="w-note">The stars you see now are examples, there to explore. Clear them whenever you like.</p>
+    <div class="w-actions"><button class="btn primary" id="wLog" type="button">Log my first feeling</button><button class="btn ghost" id="wLook" type="button">Look around first</button></div>
+  </section>
   <div class="arrive" id="arrive" aria-live="polite"><p class="arrive-k" id="arriveK"></p><h2 id="arriveName"></h2><p class="arrive-b" id="arriveBlurb"></p></div>
   <div class="replay" id="replay" hidden><span class="rp-dot" aria-hidden="true"></span><span id="replayText" aria-live="polite">Replaying</span><button class="linkbtn" id="replayStop" type="button">Stop</button></div>
   <div class="loader" id="loader" aria-hidden="true"><span>Calibrating the horizon</span><i></i></div>
@@ -1747,7 +1805,7 @@ void main(){
       g.fillText(R.name, p.x + 13, p.y + 1);
       const w = g.measureText(R.name).width;
       g.font = '400 11px "IBM Plex Sans", system-ui, sans-serif'; g.fillStyle = 'rgba(155,151,143,0.85)';
-      g.fillText(`${n} ${n === 1 ? 'signal' : 'signals'} · travel`, p.x + 13, p.y + 16);
+      g.fillText(`${n} ${n === 1 ? 'entry' : 'entries'} · travel`, p.x + 13, p.y + 16);
       g.shadowBlur = 0;
       beaconPos.set(key, { x: p.x, y: p.y, w: Math.max(w, 90) + 20 });
     }
@@ -1782,7 +1840,7 @@ void main(){
       g.fillText(R.name, p.x, p.y);
       const w1 = g.measureText(R.name).width;
       g.font = '400 11.5px "IBM Plex Sans", system-ui, sans-serif'; g.fillStyle = rgb(R.color, hov ? 1 : 0.85);
-      const sub = land ? `${R.quad} · ${n} ${n === 1 ? 'signal' : 'signals'}` : `${n} ${n === 1 ? 'signal' : 'signals'}`;
+      const sub = land ? `${R.quad} · ${n} ${n === 1 ? 'entry' : 'entries'}` : `${n} ${n === 1 ? 'entry' : 'entries'}`;
       g.fillText(sub, p.x, p.y + 18);
       const w = Math.max(w1, g.measureText(sub).width) + 8;
       mapHits.push({ id: key, x: align === 'left' ? p.x - 4 : p.x - w + 4, y: p.y - 26, w, h: 50 });
@@ -1833,11 +1891,50 @@ void main(){
   }
   function updateLocation() {
     const el = $('#loc'); if (!el) return;
-    if (region === 'map') { el.innerHTML = '<span class="sw" style="--c:rgb(236,232,223)"></span><span>Star map</span><i>every signal by valence and arousal</i>'; return; }
+    const chev = '<svg class="chev" viewBox="0 0 10 10" aria-hidden="true"><path d="M2 3.5 5 6.5 8 3.5" fill="none" stroke="currentColor" stroke-width="1.3"/></svg>';
+    if (region === 'map') { el.innerHTML = `<span class="sw" style="--c:rgb(236,232,223)"></span><span class="ln">Star map</span>${chev}<i>every entry by how pleasant and how intense</i>`; el.setAttribute('aria-label', 'You are on the star map. Choose a region'); return; }
     const R = REGIONS[region];
     const n = entries.filter((e) => regionOf(e) === region).length;
-    el.innerHTML = `<span class="sw" style="--c:${rgb(R.color)}"></span><span>${esc(R.name)}</span><i>${esc(R.quad.toLowerCase())} · ${n ? n + (n === 1 ? ' signal' : ' signals') : 'no signals yet'}</i>`;
+    el.setAttribute('aria-label', `You are in ${R.name}. Choose a region`);
+    el.innerHTML = `<span class="sw" style="--c:${rgb(R.color)}"></span><span class="ln">${esc(R.name)}</span>${chev}<i>${esc(R.quad.toLowerCase())} · ${n ? n + (n === 1 ? ' entry' : ' entries') : 'no entries yet'}</i>`;
   }
+  function renderRegionMenu() {
+    $('#regionMenu').innerHTML = [...PLACES, 'map'].map((k) => {
+      const R = REGIONS[k];
+      const n = k === 'map' ? entries.length : entries.filter((e) => regionOf(e) === k).length;
+      return `<button type="button" role="menuitem" data-region="${k}" class="${k === region ? 'cur' : ''}" style="--c:${rgb(R.color)}"><span class="sw"></span><span class="rn">${esc(R.name)}</span><span class="rq">${k === 'map' ? 'every entry on one chart' : esc(R.quad.toLowerCase())}</span><span class="rc">${n}</span></button>`;
+    }).join('');
+  }
+  function closeRegionMenu() { $('#regionMenu').hidden = true; $('#loc').setAttribute('aria-expanded', 'false'); }
+  $('#loc').addEventListener('click', () => {
+    const m = $('#regionMenu'); const open = m.hidden;
+    if (open) renderRegionMenu();
+    m.hidden = !open; $('#loc').setAttribute('aria-expanded', String(open));
+    if (open) { const f = m.querySelector('button'); if (f) f.focus(); }
+  });
+  $('#regionMenu').addEventListener('click', (ev) => { const b = ev.target.closest('[data-region]'); if (!b) return; closeRegionMenu(); travel(b.dataset.region); });
+  $('#regionMenu').addEventListener('keydown', (ev) => {
+    const items = [...$('#regionMenu').querySelectorAll('button')]; const i = items.indexOf(document.activeElement);
+    if (ev.key === 'ArrowDown') { ev.preventDefault(); items[(i + 1) % items.length].focus(); }
+    else if (ev.key === 'ArrowUp') { ev.preventDefault(); items[(i - 1 + items.length) % items.length].focus(); }
+    else if (ev.key === 'Escape') { closeRegionMenu(); $('#loc').focus(); }
+  });
+  document.addEventListener('pointerdown', (ev) => { if (!ev.target.closest('.locwrap')) closeRegionMenu(); });
+
+  const WKEY = 'inner-orrery-welcomed', HKEY = 'inner-orrery-hinted';
+  const flag = (k) => { try { return localStorage.getItem(k) === '1'; } catch (_) { return false; } };
+  const setFlag = (k) => { try { localStorage.setItem(k, '1'); } catch (_) {} };
+  function setWelcomed() { setFlag(WKEY); $('#welcome').hidden = true; }
+  function maybeWelcome() {
+    if (flag(WKEY) || !loaded || !entries.length) return false;
+    $('#wLog').hidden = !canWrite; $('#welcome').hidden = false; $('#arrive').classList.remove('show');
+    return true;
+  }
+  $('#wLog').addEventListener('click', () => { setWelcomed(); $('#btnLog').click(); });
+  $('#wLook').addEventListener('click', setWelcomed);
+  function showHint() { if (!flag(HKEY)) $('#readout').textContent = 'Drag to look around · scroll to zoom · click a star to open it'; }
+  function hintDone() { if (!flag(HKEY)) { setFlag(HKEY); $('#readout').textContent = ''; } }
+
   let arriveTimer = null;
   function showArrival(to) {
     const el = $('#arrive'); const R = REGIONS[to];
@@ -1935,10 +2032,6 @@ void main(){
     }
     drawOverlay(ctx, now);
     if (captureReq) { const r = captureReq; captureReq = null; doCapture(r); }
-    if (++readoutTick % 10 === 0) {
-      const az = ((view.rot * 180 / Math.PI) % 360 + 360) % 360;
-      $('#readout').innerHTML = `<span><b>az</b>${az.toFixed(0).padStart(3, '0')}°</span><span><b>el</b>${(view.el * 180 / Math.PI).toFixed(0).padStart(2, '0')}°</span><span><b>zoom</b>${view.zoom.toFixed(2)}×</span>`;
-    }
     requestAnimationFrame(frame);
   }
   function adaptQuality(dtMs) {
@@ -1989,6 +2082,7 @@ void main(){
       const dx = ev.clientX - drag.x, dy = ev.clientY - drag.y;
       if (Math.hypot(dx, dy) > 5) { drag.moved = true; fx.classList.add('dragging'); }
       if (drag.moved) {
+        hintDone();
         view.rot = drag.rot - dx * 0.005; view.el = clamp(drag.el + dy * 0.004, 0.035, 1.35);
         const tn = performance.now(), dtm = Math.max(1, tn - drag.lt);
         drag.vx = drag.vx * 0.6 + ((ev.clientX - drag.lx) / dtm) * 0.4; drag.vy = drag.vy * 0.6 + ((ev.clientY - drag.ly) / dtm) * 0.4;
@@ -2024,7 +2118,7 @@ void main(){
   fx.addEventListener('pointerup', endDrag);
   fx.addEventListener('pointercancel', (ev) => { pointers.delete(ev.pointerId); if (pointers.size < 2) pinch = null; drag = null; fx.classList.remove('dragging'); });
   fx.addEventListener('pointerleave', () => { if (!drag) { hover = null; hideTip(); } });
-  fx.addEventListener('wheel', (ev) => { ev.preventDefault(); intro = null; lastInteract = performance.now(); view.zoom = clamp(view.zoom * Math.exp(-ev.deltaY * 0.0012), 0.6, 4); }, { passive: false });
+  fx.addEventListener('wheel', (ev) => { ev.preventDefault(); intro = null; hintDone(); lastInteract = performance.now(); view.zoom = clamp(view.zoom * Math.exp(-ev.deltaY * 0.0012), 0.6, 4); }, { passive: false });
   function resetView() { intro = null; vel.rot = vel.el = 0; const v = REGIONS[region].view; view.rot = v.rot; view.el = v.el; view.zoom = v.zoom; }
   fx.addEventListener('dblclick', resetView);
   document.addEventListener('keydown', (ev) => {
@@ -2060,16 +2154,17 @@ void main(){
   // ---------- Panel ----------
   const panel = $('#panel');
   let currentView = null;
-  const VIEWS = { form: ['#viewForm', 'Log a signal'], detail: ['#viewDetail', 'Signal'], journal: ['#viewJournal', 'Journal'], patterns: ['#viewPatterns', 'Patterns'], about: ['#viewAbout', 'About this sky'] };
+  const VIEWS = { form: ['#viewForm', 'Log a feeling'], detail: ['#viewDetail', 'Entry'], journal: ['#viewJournal', 'Journal'], patterns: ['#viewPatterns', 'Patterns'], about: ['#viewAbout', 'About this sky'] };
   let lastFocus = null;
   function openPanel(v) {
     const wasOpen = panelOpen();
     if (!wasOpen && document.activeElement && document.activeElement !== document.body) lastFocus = document.activeElement;
     currentView = v;
     for (const [k, [sel]] of Object.entries(VIEWS)) $(sel).hidden = k !== v;
-    $('#panelTitle').textContent = v === 'form' && editingId ? 'Edit signal' : VIEWS[v][1];
+    $('#panelTitle').textContent = v === 'form' && editingId ? 'Edit entry' : VIEWS[v][1];
     panel.classList.add('open'); panel.inert = false; $('#app').classList.add('panel-open'); $('#legend').open = false;
     if (v !== 'form') setTimeout(() => { try { $('#panelTitle').focus({ preventScroll: true }); } catch (_) {} }, 30);
+    if (v === 'form') goStep(0, false);
     if (v === 'journal') renderJournal();
     if (v === 'patterns') renderPatterns();
     if (v === 'detail') renderDetail();
@@ -2100,7 +2195,12 @@ void main(){
   $('#btnAbout').addEventListener('click', () => currentView === 'about' ? closePanel() : openPanel('about'));
   $('#btnLog').addEventListener('click', () => { selected = null; if (editingId) { editingId = null; resetForm(); } setWhen(Date.now()); openPanel('form'); setTimeout(() => $('#fLabel').focus({ preventScroll: true }), 60); });
   $('#btnEmptyLog').addEventListener('click', () => $('#btnLog').click());
-  document.addEventListener('keydown', (ev) => { if (ev.key === 'Escape' && panelOpen()) { closePanel(); selected = null; } });
+  document.addEventListener('keydown', (ev) => {
+    if (ev.key !== 'Escape') return;
+    if (!$('#regionMenu').hidden) { closeRegionMenu(); return; }
+    if (!$('#welcome').hidden) { setWelcomed(); return; }
+    if (panelOpen()) { closePanel(); selected = null; }
+  });
   $('#panelBody').addEventListener('click', (ev) => {
     const b = ev.target.closest('[data-goto]'); if (b) { select(b.dataset.goto); return; }
     const tv = ev.target.closest('[data-travel]'); if (tv) travel(tv.dataset.travel);
@@ -2179,18 +2279,47 @@ void main(){
   $('#fAfter').addEventListener('input', () => { afterTouched = true; syncOutputs(); });
   syncOutputs();
 
+  // ----- one question at a time -----
+  const stepEls = [...document.querySelectorAll('#logForm fieldset.param')];
+  let step = 0;
+  $('#logForm').classList.add('stepper');
+  function renderSteps() {
+    stepEls.forEach((f, i) => f.classList.toggle('cur', i === step));
+    $('#steps').innerHTML = stepEls.map((f, i) => `<li><button type="button" data-step="${i}" class="${i < step ? 'done' : ''}" ${i === step ? 'aria-current="step"' : ''} aria-label="Step ${i + 1}: ${esc(f.dataset.name)}" title="${esc(f.dataset.name)}"></button></li>`).join('');
+    $('#stepMeta').innerHTML = `<span>Step ${step + 1} of ${stepEls.length}</span><span>${esc(stepEls[step].dataset.param)}</span>`;
+    $('#btnBack').disabled = step === 0;
+    $('#btnNext').hidden = step === stepEls.length - 1;
+  }
+  function goStep(i, focus = true) {
+    if (i > 0 && !$('#fLabel').value.trim()) { step = 0; renderSteps(); $('#formMsg').textContent = 'Give it a name first, even a rough one.'; $('#fLabel').focus(); return; }
+    $('#formMsg').textContent = '';
+    step = clamp(i, 0, stepEls.length - 1); renderSteps();
+    $('#panelBody').scrollTop = 0;
+    if (focus) { const f = stepEls[step].querySelector('input[type="text"], textarea, .chip, input[type="range"], input[type="radio"]'); if (f) try { f.focus({ preventScroll: true }); } catch (_) {} }
+  }
+  $('#steps').addEventListener('click', (ev) => { const b = ev.target.closest('[data-step]'); if (b) goStep(+b.dataset.step); });
+  $('#btnBack').addEventListener('click', () => goStep(step - 1));
+  $('#btnNext').addEventListener('click', () => goStep(step + 1));
+  $('#logForm').addEventListener('keydown', (ev) => {
+    if (ev.key !== 'Enter' || !ev.target.matches('input[type="text"], input[type="datetime-local"]')) return;
+    ev.preventDefault();
+    if (step < stepEls.length - 1) goStep(step + 1); else $('#btnSave').click();
+  });
+  renderSteps();
+
   function resetForm() {
     $('#logForm').reset(); afterTouched = false;
     document.querySelectorAll('#logForm .chip').forEach((c) => c.setAttribute('aria-pressed', 'false'));
     $('#formMsg').textContent = '';
     $('#btnSave').textContent = 'Add to the sky';
+    step = 0; renderSteps();
     syncOutputs();
   }
 
   $('#logForm').addEventListener('submit', async (ev) => {
     ev.preventDefault();
     const label = $('#fLabel').value.trim().slice(0, 40);
-    if (!label) { $('#formMsg').textContent = 'Give it a label first, even a rough one.'; $('#fLabel').focus(); return; }
+    if (!label) { goStep(0, false); $('#formMsg').textContent = 'Give it a name first, even a rough one.'; $('#fLabel').focus(); return; }
     const data = {
       label,
       valence: +$('#fValence').value,
@@ -2226,7 +2355,7 @@ void main(){
   async function saveEntry(data) {
     if (mode === 'db') {
       const ref = col.doc();
-      bornAt.set(ref.id, performance.now());
+      bornAt.set(ref.id, performance.now()); setWelcomed();
       await ref.set(data);
       return ref.id;
     }
@@ -2338,11 +2467,15 @@ void main(){
     };
   }
 
+  let jQuery = '';
   function renderJournal() {
     const el = $('#viewJournal');
-    if (!entries.length) { el.innerHTML = '<p class="lede">No entries yet. Each signal you log shows up here, newest first.</p>'; return; }
-    const list = [...entries].sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
-    let html = ''; let lastDay = '';
+    if (!entries.length) { el.innerHTML = '<p class="lede">No entries yet. Each entry you log shows up here, newest first.</p>'; return; }
+    const terms = norm(jQuery).split(/\s+/).filter(Boolean);
+    const hay = (e) => [e.label, e.trigger, e.reflection, e.bodyNote, e.contextNote, e.regulationNote, ...(e.body || []), ...(e.context || []), ...(e.regulation || []), REGIONS[regionOf(e)].name].join(' ').toLowerCase();
+    const list = [...entries].sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0)).filter((e) => !terms.length || terms.every((t) => hay(e).includes(t)));
+    const hadFocus = document.activeElement && document.activeElement.id === 'jSearch';
+    let html = list.length ? '' : `<p class="lede">Nothing matches “${esc(jQuery)}”.</p>`; let lastDay = '';
     for (const e of list) {
       const day = e.createdAt ? fmtDay.format(e.createdAt) : 'Undated';
       if (day !== lastDay) { html += `<p class="day">${esc(day)}</p>`; lastDay = day; }
@@ -2351,10 +2484,14 @@ void main(){
       const sub = REGIONS[regionOf(e)].name + (sub0 ? ' · ' + sub0 : '');
       html += `<button type="button" class="row" data-goto="${esc(e.id)}" style="--c:${rgb(d.color)}"><span class="dot"></span><span class="t"><b>${esc(e.label || 'Unnamed')}</b><small>${esc(sub)}</small></span><span class="r"><span>I ${esc(e.intensity ?? '–')}${e.after != null ? '→' + esc(e.after) : ''}</span>${d.misfire ? '<span class="tag flare">Misread</span>' : e.example ? '<span class="tag">Example</span>' : ''}</span></button>`;
     }
-    el.innerHTML = `<p class="lede">${entries.length} ${entries.length === 1 ? 'entry' : 'entries'}. Pick one to find it in the sky.</p>
+    el.innerHTML = `<p class="lede">${entries.length} ${entries.length === 1 ? 'entry' : 'entries'}. Pick one to fly to it.</p>
+      <input type="search" id="jSearch" class="search" placeholder="Search names, triggers, places" aria-label="Search the journal" value="${esc(jQuery)}" autocomplete="off">
       <div class="j-actions"><button type="button" class="btn" id="btnReplay"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M5 3l8 5-8 5z" fill="currentColor"/></svg>Replay your sky</button><button type="button" class="btn ghost" id="btnCsv">Export CSV</button><button type="button" class="btn ghost" id="btnJson">JSON</button>${canWrite ? '<button type="button" class="btn ghost" id="btnImport">Import</button>' : ''}</div>
       <div class="rel">${html}</div>`;
     $('#btnReplay').onclick = startReplay;
+    const js = $('#jSearch');
+    js.oninput = () => { jQuery = js.value; renderJournal(); };
+    if (hadFocus) { js.focus(); js.setSelectionRange(js.value.length, js.value.length); }
     const bc = $('#btnCsv'); if (bc) bc.onclick = () => exportData('csv');
     const bj = $('#btnJson'); if (bj) bj.onclick = () => exportData('json');
     const bi = $('#btnImport'); if (bi) bi.onclick = () => $('#fImport').click();
@@ -2369,16 +2506,16 @@ void main(){
   function renderPatterns() {
     const el = $('#viewPatterns');
     const n = entries.length;
-    if (!n) { el.innerHTML = '<p class="lede">Patterns appear once you have a few entries. Log three or four signals across different days to see your beads, misreads and what brings intensity down.</p>'; return; }
+    if (!n) { el.innerHTML = '<p class="lede">Patterns appear once you have a few entries. Log three or four entries across different days to see your beads, misreads and what brings intensity down.</p>'; return; }
     // beads
     const sum = { body: 0, cognition: 0, emotion: 0 };
     for (const e of entries) for (const k in sum) sum[k] += +(e.weights || {})[k] || 0;
     const tot = sum.body + sum.cognition + sum.emotion || 1;
     const lead = Object.entries(sum).sort((a, b) => b[1] - a[1])[0][0];
-    let html = `<div><h4>Bead balance</h4><p class="lede" style="margin-bottom:10px">Across ${n} ${n === 1 ? 'entry' : 'entries'}, <b style="color:var(--ink)">${BEAD_NAME[lead]}</b> carried the most signal.</p><div class="bars">
+    let html = `<div><h4>Bead balance</h4><p class="lede" style="margin-bottom:10px">Across ${n} ${n === 1 ? 'entry' : 'entries'}, <b style="color:var(--ink)">${BEAD_NAME[lead]}</b> carried the most entry.</p><div class="bars">
       ${['body', 'cognition', 'emotion'].map((k) => barRow(BEAD_NAME[k], sum[k], tot, Math.round((sum[k] / tot) * 100) + '%', rgb(BEAD[k]))).join('')}</div></div>`;
     // regions
-    html += `<div class="block"><h4>Where your signals live</h4><p>Each region is one quarter of the circumplex: pleasant or unpleasant, intense or calm.</p><div class="bars">${PLACES.map((k) => { const c = entries.filter((e) => regionOf(e) === k).length; return barRow(REGIONS[k].name, c, n, String(c), rgb(REGIONS[k].color)); }).join('')}</div></div>`;
+    html += `<div class="block"><h4>Where your entries live</h4><p>Each region is one quarter of the circumplex: pleasant or unpleasant, intense or calm.</p><div class="bars">${PLACES.map((k) => { const c = entries.filter((e) => regionOf(e) === k).length; return barRow(REGIONS[k].name, c, n, String(c), rgb(REGIONS[k].color)); }).join('')}</div></div>`;
     // reads
     const read = entries.filter((e) => e.read);
     const mis = entries.filter(isMisfire);
@@ -2439,7 +2576,7 @@ void main(){
     const read = entries.filter((e) => e.read && e.read !== 'unsure');
     const mis = read.filter(isMisfire).length;
     const cn = constellations.length;
-    $('#stats').innerHTML = `<span><b>${n}</b> ${n === 1 ? 'signal' : 'signals'}</span><span><b>${cn}</b> ${cn === 1 ? 'constellation' : 'constellations'}</span><span><b>${read.length ? Math.round((mis / read.length) * 100) + '%' : '–'}</b> misread</span>`;
+    $('#stats').innerHTML = `<span><b>${n}</b> ${n === 1 ? 'entry' : 'entries'}</span><span><b>${cn}</b> ${cn === 1 ? 'constellation' : 'constellations'}</span><span><b>${read.length ? Math.round((mis / read.length) * 100) + '%' : '–'}</b> misread</span>`;
     renderNote();
   }
   let clearArmed = false;
@@ -2467,7 +2604,7 @@ void main(){
     const show = loaded && entries.length === 0 && !panelOpen() && !replay;
     $('#empty').hidden = !show;
     $('#btnEmptyLog').hidden = !canWrite;
-    if (!canWrite) $('#emptyText').textContent = 'No signals have been logged in this sky yet.';
+    if (!canWrite) $('#emptyText').textContent = 'No entries have been logged in this sky yet.';
   }
   let toastTimer = null;
   function toast(msg) { const t = $('#toast'); t.textContent = msg; t.hidden = false; clearTimeout(toastTimer); toastTimer = setTimeout(() => { t.hidden = true; }, 3400); }
@@ -2547,7 +2684,7 @@ void main(){
       g.globalCompositeOperation = G ? 'screen' : 'source-over'; g.drawImage(fx, 0, 0, w, h);
       g.globalCompositeOperation = 'source-over';
       g.font = `500 ${Math.round(11 * dpr)}px "IBM Plex Mono", monospace`; g.fillStyle = 'rgba(236,232,223,0.55)';
-      g.fillText(`INNER ORRERY · ${entries.length} SIGNALS · ${stamp()}`, 20 * dpr, h - 20 * dpr);
+      g.fillText(`INNER ORRERY · ${entries.length} ENTRIES · ${stamp()}`, 20 * dpr, h - 20 * dpr);
       c.toBlob((blob) => { if (blob) offerFile(`inner-orrery-${stamp()}.png`, blob, 'Picture saved.'); else toast('The picture could not be made.'); }, 'image/png');
     } catch (_) { toast('The picture could not be made.'); }
   }
@@ -2658,7 +2795,7 @@ void main(){
     glPending = false; fade = reduceMotion ? 0.6 : 0;
     if (intro) intro.t0 = performance.now();
     $('#loader').classList.add('done'); setTimeout(() => { $('#loader').hidden = true; }, 900);
-    setTimeout(() => { if (region === 'horizon' && !trav) showArrival('horizon'); }, reduceMotion ? 400 : 3200);
+    setTimeout(() => { if (!maybeWelcome() && region === 'horizon' && !trav) showArrival('horizon'); showHint(); }, reduceMotion ? 400 : 3200);
   }, 60);
   (async () => {
     try { downloads = window.claude && window.claude.use ? await window.claude.use('downloads') : null; } catch (_) { downloads = null; }
