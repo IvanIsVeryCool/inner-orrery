@@ -104,7 +104,7 @@ button, input, textarea { font: inherit; color: inherit; }
 .arrive { position: absolute; z-index: 4; left: max(24px, env(safe-area-inset-left, 0px)); bottom: calc(env(safe-area-inset-bottom, 0px) + 62px); max-width: 32ch; pointer-events: none; opacity: 0; transform: translateY(10px); transition: opacity .9s ease, transform 1.2s cubic-bezier(.2,.8,.2,1); text-shadow: 0 2px 20px rgba(0,0,0,.9); }
 .arrive.show { opacity: 1; transform: none; }
 .arrive-k { margin: 0 0 10px; font-size: 12.5px; color: var(--c, var(--dim)); }
-.arrive h2 { margin: 0; font-family: var(--f-display); font-weight: 400; font-size: clamp(42px, 6vw, 76px); line-height: .92; letter-spacing: -.012em; }
+.arrive .arrive-title { margin: 0; font-family: var(--f-display); font-weight: 400; font-size: clamp(42px, 6vw, 76px); line-height: .92; letter-spacing: -.012em; }
 .arrive-b { margin: 14px 0 0; color: var(--dim); font-size: 14px; line-height: 1.6; }
 #app.panel-open .arrive { opacity: 0; }
 .welcome { position: absolute; z-index: 5; left: max(24px, env(safe-area-inset-left, 0px)); bottom: calc(env(safe-area-inset-bottom, 0px) + 56px); width: min(400px, calc(100% - 48px)); padding: 22px 22px 18px; background: var(--sheet); border: 1px solid var(--line-2); border-radius: var(--r); }
@@ -219,6 +219,7 @@ button.tag { font: inherit; font-size: 11px; line-height: 1; background: none; c
 .icon-btn { width: 32px; height: 32px; border-radius: var(--r); border: 1px solid transparent; background: transparent; color: var(--dim); cursor: pointer; display: grid; place-items: center; flex: none; }
 .icon-btn:hover { color: var(--ink); background: var(--hover); }
 .icon-btn.sm { width: 30px; height: 30px; }
+.panel-body:focus-visible { outline: 1.5px solid var(--accent); outline-offset: -3px; }
 .panel-body { overflow-y: auto; overscroll-behavior: contain; padding: 20px max(24px, env(safe-area-inset-right, 0px)) calc(env(safe-area-inset-bottom, 0px) + 28px) 24px; min-height: 0; flex: 1; scrollbar-width: thin; scrollbar-color: var(--line-2) transparent; }
 .view { display: grid; gap: 22px; }
 .view:not([hidden]) { animation: viewIn .32s ease; }
@@ -226,8 +227,10 @@ button.tag { font: inherit; font-size: 11px; line-height: 1; background: none; c
 
 .lede { margin: 0; color: var(--dim); line-height: 1.6; }
 .about .lede b { color: var(--ink); font-weight: 600; }
-h4 { font-size: 12.5px; font-weight: 600; margin: 0 0 10px; color: var(--ink); letter-spacing: .01em; }
+h3.sec { font-size: 12.5px; font-weight: 600; margin: 0 0 10px; color: var(--ink); letter-spacing: .01em; }
 .muted { color: var(--faint); }
+.skip { position: absolute; z-index: 20; left: 12px; top: 12px; padding: 8px 12px; background: var(--accent); color: var(--accent-ink); border-radius: var(--r); font-size: 13px; font-weight: 600; transform: translateY(-200%); }
+.skip:focus { transform: none; }
 .mapcap { position: absolute; z-index: 3; left: 50%; transform: translateX(-50%); bottom: calc(env(safe-area-inset-bottom, 0px) + 18px); width: min(50ch, calc(100% - 640px)); text-align: center; margin: 0; font-size: 13px; line-height: 1.55; color: var(--dim); text-shadow: 0 1px 12px #000, 0 0 2px #000; pointer-events: none; }
 #app.panel-open .mapcap { display: none; }
 @media (max-width: 1100px) { .mapcap { display: none; } }
@@ -396,9 +399,10 @@ dl.params.keys > div { grid-template-columns: 84px 1fr; }
 <body>
 <noscript><p style="margin:0;padding:24px;font:15px/1.6 system-ui,sans-serif;color:#e9e6df;background:#030304">Inner Orrery draws its sky with JavaScript and WebGL. Turn JavaScript on to open your journal.</p></noscript>
 
-<div id="app">
+<main id="app">
   <canvas id="gl" aria-hidden="true"></canvas>
-  <canvas id="fx" aria-label="Your emotional system: each star is one journal entry orbiting a black hole"></canvas>
+  <a class="skip" href="#" id="skipJournal">Skip to the journal</a>
+  <canvas id="fx" role="img" aria-label="Your emotional system: each star is one journal entry orbiting a black hole. Use the journal to browse entries."></canvas>
 
   <div class="chrome">
     <div class="row-top">
@@ -478,7 +482,7 @@ dl.params.keys > div { grid-template-columns: 84px 1fr; }
         <svg viewBox="0 0 16 16" width="13" height="13" aria-hidden="true"><path d="M3 3l10 10M13 3 3 13" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
       </button>
     </div>
-    <div class="panel-body" id="panelBody">
+    <div class="panel-body" id="panelBody" tabindex="0" aria-label="Panel content">
       <section class="view" id="viewForm" hidden>
         <p class="lede">Eight short questions, one at a time. Only the first one is required, and you can save at any step.</p>
         <div class="stepper-head"><div class="step-meta" id="stepMeta"></div><ol class="steps" id="steps" aria-label="Steps"></ol></div>
@@ -582,7 +586,7 @@ dl.params.keys > div { grid-template-columns: 84px 1fr; }
       <section class="view" id="viewPatterns" hidden></section>
       <section class="view about" id="viewAbout" hidden>
         <p class="lede">A journal for the <b>Kaleidoscope Project</b>: body, cognition and emotion, and how they interact. Every feeling you log becomes a star in orbit around one black hole, and the sky slowly shows you your own patterns.</p>
-        <div><h4>Reading the sky</h4>
+        <div><h3 class="sec">Reading the sky</h3>
           <dl class="params">
             <div><dt>Black hole</dt><dd>The moment body, thought and feeling collapse into one conscious experience. Nothing reaches you unmixed.</dd></div>
             <div><dt>Three planets</dt><dd>The beads of the kaleidoscope: <b style="color:var(--body)">Body</b>, <b style="color:var(--mind)">Cognition</b>, <b style="color:var(--heart)">Emotion</b>. Each star's color is its mix of the three.</dd></div>
@@ -593,7 +597,7 @@ dl.params.keys > div { grid-template-columns: 84px 1fr; }
             <div><dt>Marks</dt><dd>A ring means you regulated it. A flickering corona means the read misfired.</dd></div>
           </dl>
         </div>
-        <div><h4>Four regions of space</h4>
+        <div><h3 class="sec">Four regions of space</h3>
           <p class="lede">Every feeling is placed on two dimensions psychologists use to map emotion: valence, from unpleasant to pleasant, and arousal, from calm to intense. Together they form Russell's circumplex model of affect. Each quarter of it is a different place in space. Open the Star map to see every entry plotted on those two axes, then travel to a region.</p>
           <dl class="params">
             <div><dt>The Horizon</dt><dd>Intense and unpleasant. A black hole.</dd></div>
@@ -602,13 +606,13 @@ dl.params.keys > div { grid-template-columns: 84px 1fr; }
             <div><dt>The Drift</dt><dd>Calm and unpleasant. A planetary nebula, the shell a dying star leaves behind.</dd></div>
           </dl>
         </div>
-        <div><h4>The seven parameters</h4>
+        <div><h3 class="sec">The seven parameters</h3>
           <p class="lede">Label, bodily signature, trigger, context, history and baseline, failure mode, and regulation. Each log walks through all seven; only the label is required.</p>
         </div>
-        <div><h4>The physics is real</h4>
+        <div><h3 class="sec">The physics is real</h3>
           <p class="lede">The black hole is ray-traced through the Schwarzschild metric. Light bends around it, the far side of the disk wraps over the top, the side turning toward you glows brighter and bluer, and stars behind it are lensed into arcs. The wide sky's bending is softened a little so the background stays readable.</p>
         </div>
-        <div><h4>Controls</h4>
+        <div><h3 class="sec">Controls</h3>
           <dl class="params keys">
             <div><dt>Orbit</dt><dd>Drag, or the arrow keys</dd></div>
             <div><dt>Zoom</dt><dd>Scroll, pinch, or + and −</dd></div>
@@ -634,12 +638,12 @@ dl.params.keys > div { grid-template-columns: 84px 1fr; }
     <div class="w-actions"><button class="btn primary" id="wLog" type="button">Log my first feeling</button><button class="btn ghost" id="wLook" type="button">Look around first</button></div>
   </section>
   <p class="mapcap" id="mapcap" hidden>Each point is one entry, placed by how pleasant it felt (left to right) and how intense (bottom to top). Lines join entries with the same name, oldest to newest. Click a region name to go there.</p>
-  <div class="arrive" id="arrive" aria-live="polite"><p class="arrive-k" id="arriveK"></p><h2 id="arriveName"></h2><p class="arrive-b" id="arriveBlurb"></p></div>
+  <div class="arrive" id="arrive" aria-live="polite"><p class="arrive-k" id="arriveK"></p><p class="arrive-title" id="arriveName"></p><p class="arrive-b" id="arriveBlurb"></p></div>
   <div class="replay" id="replay" hidden><span class="rp-dot" aria-hidden="true"></span><span id="replayText" aria-live="polite">Replaying</span><button class="linkbtn" id="replayStop" type="button">Stop</button></div>
   <div class="loader" id="loader" aria-hidden="true"><span>Calibrating the horizon</span><i></i></div>
   <input type="file" id="fImport" accept=".json,application/json" hidden>
   <div class="toast" id="toast" role="status" hidden></div>
-</div>
+</main>
 
 <script>
 (() => {
@@ -1988,6 +1992,8 @@ void main(){
   }
   function updateLocation() {
     const el = $('#loc'); if (!el) return;
+    const fxl = region === 'map' ? `Star map: ${entries.length} entries plotted by how pleasant and how intense they felt.` : `${REGIONS[region].name}, ${REGIONS[region].quad.toLowerCase()}: ${entries.filter((e) => regionOf(e) === region).map((e) => e.label).filter(Boolean).join(', ') || 'no entries yet'}. Use the journal to browse entries.`;
+    fx.setAttribute('aria-label', fxl);
     const chev = '<svg class="chev" viewBox="0 0 10 10" aria-hidden="true"><path d="M2 3.5 5 6.5 8 3.5" fill="none" stroke="currentColor" stroke-width="1.3"/></svg>';
     if (region === 'map') { el.innerHTML = `<span class="sw" style="--c:rgb(236,232,223)"></span><span class="ln">Star map</span>${chev}<i>every entry by how pleasant and how intense</i>`; el.setAttribute('aria-label', 'You are on the star map. Choose a region'); return; }
     const R = REGIONS[region];
@@ -2296,6 +2302,7 @@ void main(){
   $('#btnLog').addEventListener('click', () => { selected = null; if (editingId) { editingId = null; resetForm(); } setWhen(Date.now()); openPanel('form'); setTimeout(() => $('#fLabel').focus({ preventScroll: true }), 60); });
   $('#btnEmptyLog').addEventListener('click', () => $('#btnLog').click());
   $('#btnRemptyLog').addEventListener('click', () => $('#btnLog').click());
+  $('#skipJournal').addEventListener('click', (ev) => { ev.preventDefault(); openPanel('journal'); });
   document.addEventListener('keydown', (ev) => {
     if (ev.key !== 'Escape') return;
     if (!$('#regionMenu').hidden) { closeRegionMenu(); return; }
@@ -2550,7 +2557,7 @@ void main(){
         <div class="kpi"><span class="k">Feel</span><span class="v">${v === 0 ? 'Neutral' : (v < 0 ? 'Unpleasant ' : 'Pleasant ') + Math.abs(v)}</span></div>
         <div class="kpi"><span class="k">Read</span><span class="v">${esc(READ_NAMES[e.read] || '—')}</span></div>
       </div>
-      <div><h4>Bead mix</h4><div class="bars">
+      <div><h3 class="sec">Bead mix</h3><div class="bars">
         ${['body', 'cognition', 'emotion'].map((k) => `<div class="bar" style="--c:${rgb(BEAD[k])}"><span class="lbl">${BEAD_NAME[k]}</span><span class="track"><span class="fill" style="display:block;width:${Math.round(((+w[k] || 0) / 10) * 100)}%"></span></span><span class="n">${Math.round(((+w[k] || 0) / tot) * 100)}%</span></div>`).join('')}
       </div></div>
       <dl class="params">
@@ -2561,7 +2568,7 @@ void main(){
         ${paramRow('Failure mode', (e.read ? `<div>${esc(READ_NAMES[e.read])}</div>` : '') + para(e.reflection))}
         ${paramRow('Regulation', chipList(e.regulation) + para(e.regulationNote))}
       </dl>
-      <div><h4>Related entries</h4>${rel.length ? `<ul class="rel">${rel.map((r) => {
+      <div><h3 class="sec">Related entries</h3>${rel.length ? `<ul class="rel">${rel.map((r) => {
         const rd = derived.get(r.b.id);
         return `<li><button type="button" class="row" data-goto="${esc(r.b.id)}" style="--c:${rgb(rd.color)}"><span class="dot"></span><span class="t"><b>${esc(r.b.label || 'Unnamed')}</b><small>${esc(r.why.join(' · '))}</small></span><span class="r">${r.b.createdAt ? esc(fmtDay.format(r.b.createdAt)) : ''}</span></button></li>`;
       }).join('')}</ul>` : '<p class="lede">No close relations yet. Lines form when entries share a label, body signature, context, baseline or trigger words.</p>'}</div>
@@ -2689,7 +2696,7 @@ void main(){
     const avg = drops.reduce((a, b) => a + b, 0) / drops.length;
     const rows = pts.slice().reverse().map((e) => `<tr><td>${esc(fmtS.format(e.createdAt))}</td><td>${esc(e.label || 'Unnamed')}</td><td class="n">${esc(e.intensity)}</td><td class="n">${esc(e.after)}</td></tr>`).join('');
     return `<div class="chart" id="ichart">
-      <h4>Intensity, before and after</h4>
+      <h3 class="sec">Intensity, before and after</h3>
       <p class="chart-sub">Each line is one entry: how strong it was, and how strong after what you did. On average it dropped ${avg.toFixed(1)} points.</p>
       <div class="legend-row"><span><i style="--c:${C_BEFORE}"></i>Before</span><span><i style="--c:${C_AFTER}"></i>After</span></div>
       <svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Intensity before and after for ${pts.length} entries; average drop ${avg.toFixed(1)} points">${g}${m}</svg>
@@ -2724,24 +2731,24 @@ void main(){
     const tot = sum.body + sum.cognition + sum.emotion || 1;
     const lead = Object.entries(sum).sort((a, b) => b[1] - a[1])[0][0];
     const tips = insights();
-    let html = tips.length ? `<div><h4>What your sky is saying</h4><ul class="insights">${tips.map((t) => `<li>${t}</li>`).join('')}</ul></div>` : '';
+    let html = tips.length ? `<div><h3 class="sec">What your sky is saying</h3><ul class="insights">${tips.map((t) => `<li>${t}</li>`).join('')}</ul></div>` : '';
     const ch = intensityChart();
     if (ch) html += `<div class="${html ? 'block' : ''}">${ch}</div>`;
-    html += `<div class="${html ? 'block' : ''}"><h4>Bead balance</h4><p class="lede" style="margin-bottom:10px">Across ${n} ${n === 1 ? 'entry' : 'entries'}, <b style="color:var(--ink)">${BEAD_NAME[lead]}</b> carried the most weight.</p><div class="bars">
+    html += `<div class="${html ? 'block' : ''}"><h3 class="sec">Bead balance</h3><p class="lede" style="margin-bottom:10px">Across ${n} ${n === 1 ? 'entry' : 'entries'}, <b style="color:var(--ink)">${BEAD_NAME[lead]}</b> carried the most weight.</p><div class="bars">
       ${['body', 'cognition', 'emotion'].map((k) => barRow(BEAD_NAME[k], sum[k], tot, Math.round((sum[k] / tot) * 100) + '%', rgb(BEAD[k]))).join('')}</div></div>`;
     // regions
-    html += `<div class="block"><h4>Where your entries live</h4><p>Each region is one quarter of the circumplex: pleasant or unpleasant, intense or calm.</p><div class="bars">${PLACES.map((k) => { const c = entries.filter((e) => regionOf(e) === k).length; return barRow(REGIONS[k].name, c, n, String(c), rgb(REGIONS[k].color)); }).join('')}</div></div>`;
+    html += `<div class="block"><h3 class="sec">Where your entries live</h3><p>Each region is one quarter of the circumplex: pleasant or unpleasant, intense or calm.</p><div class="bars">${PLACES.map((k) => { const c = entries.filter((e) => regionOf(e) === k).length; return barRow(REGIONS[k].name, c, n, String(c), rgb(REGIONS[k].color)); }).join('')}</div></div>`;
     // reads
     const read = entries.filter((e) => e.read);
     const mis = entries.filter(isMisfire);
     const rc = countBy(read.map((e) => [e.read]));
-    html += `<div class="block"><h4>Read check</h4><p><b>${mis.length} of ${read.length || 0}</b> checked reads misfired.</p>${rc.length ? `<div class="bars">${rc.map(([k, c]) => barRow(READ_NAMES[k] || k, c, read.length, String(c), k === 'fit' ? 'var(--accent)' : k === 'unsure' ? 'var(--faint)' : 'var(--flare)')).join('')}</div>` : ''}</div>`;
+    html += `<div class="block"><h3 class="sec">Read check</h3><p><b>${mis.length} of ${read.length || 0}</b> checked reads misfired.</p>${rc.length ? `<div class="bars">${rc.map(([k, c]) => barRow(READ_NAMES[k] || k, c, read.length, String(c), k === 'fit' ? 'var(--accent)' : k === 'unsure' ? 'var(--faint)' : 'var(--flare)')).join('')}</div>` : ''}</div>`;
     // baseline effect
     const withRead = entries.filter((e) => e.read && e.read !== 'unsure');
     const dep = withRead.filter((e) => (e.baseline || []).some((b) => STRESSORS.has(b)));
     const ok = withRead.filter((e) => !(e.baseline || []).some((b) => STRESSORS.has(b)));
     const rate = (arr) => arr.length ? Math.round((arr.filter(isMisfire).length / arr.length) * 100) : null;
-    html += `<div class="block"><h4>Baseline effect</h4>`;
+    html += `<div class="block"><h3 class="sec">Baseline effect</h3>`;
     if (dep.length && ok.length) {
       const a = rate(dep), b = rate(ok);
       html += `<p>When you started depleted (slept badly, hungry, already stressed, caffeine, sick), <b>${a}%</b> of reads misfired, against <b>${b}%</b> otherwise.</p><div class="bars">${barRow('Depleted', a, 100, a + '%', 'var(--flare)')}${barRow('Steady', b, 100, b + '%', 'var(--accent)')}</div>`;
@@ -2752,12 +2759,12 @@ void main(){
     for (const e of entries) { if (e.after == null || e.intensity == null) continue; for (const r of e.regulation || []) { if (r === 'Nothing yet') continue; const v = regMap.get(r) || { s: 0, c: 0 }; v.s += (+e.intensity) - (+e.after); v.c++; regMap.set(r, v); } }
     const regs = [...regMap.entries()].map(([k, v]) => [k, v.s / v.c, v.c]).sort((a, b) => b[1] - a[1]);
     const maxDrop = Math.max(1, ...regs.map((r) => r[1]));
-    html += `<div class="block"><h4>What brought intensity down</h4>${regs.length ? `<p>Average drop in intensity, on a ten-point scale, after each strategy.</p><div class="bars">${regs.slice(0, 6).map(([k, avg, c]) => barRow(k, Math.max(0, avg), maxDrop, (avg >= 0 ? '−' : '+') + Math.abs(avg).toFixed(1), 'var(--accent)')).join('')}</div>` : '<p>Note what you did and how intense it felt afterwards, and the strategies that work will rise to the top here.</p>'}</div>`;
+    html += `<div class="block"><h3 class="sec">What brought intensity down</h3>${regs.length ? `<p>Average drop in intensity, on a ten-point scale, after each strategy.</p><div class="bars">${regs.slice(0, 6).map(([k, avg, c]) => barRow(k, Math.max(0, avg), maxDrop, (avg >= 0 ? '−' : '+') + Math.abs(avg).toFixed(1), 'var(--accent)')).join('')}</div>` : '<p>Note what you did and how intense it felt afterwards, and the strategies that work will rise to the top here.</p>'}</div>`;
     // recurring signatures
     const byLabel = new Map();
     for (const e of entries) { const k = norm(e.label); if (!k) continue; if (!byLabel.has(k)) byLabel.set(k, []); byLabel.get(k).push(e); }
     const rec = [...byLabel.entries()].filter(([, l]) => l.length >= 2).sort((a, b) => b[1].length - a[1].length).slice(0, 5);
-    html += `<div class="block"><h4>Recurring signatures</h4>`;
+    html += `<div class="block"><h3 class="sec">Recurring signatures</h3>`;
     if (rec.length) {
       html += rec.map(([k, l]) => {
         const tb = countBy(l.map((e) => e.body))[0]; const tc = countBy(l.map((e) => e.context))[0];
@@ -2771,7 +2778,7 @@ void main(){
     } else html += `<p>Once a feeling shows up twice, its shared body signature and context appear here.</p>`;
     html += `</div>`;
     // constellations
-    html += `<div class="block"><h4>Constellations</h4>`;
+    html += `<div class="block"><h3 class="sec">Constellations</h3>`;
     if (constellations.length) {
       html += constellations.slice(0, 4).map((c) => {
         const labels = countBy(c.map((e) => [norm(e.label)])).slice(0, 3).map((x) => x[0]);
