@@ -613,6 +613,7 @@ dl.params.keys > div { grid-template-columns: 84px 1fr; }
             <div><dt>Orbit</dt><dd>Drag, or the arrow keys</dd></div>
             <div><dt>Zoom</dt><dd>Scroll, pinch, or + and −</dd></div>
             <div><dt>Reset</dt><dd>Double-click, or 0</dd></div>
+            <div><dt>Report</dt><dd>Patterns → Export project report, a printable summary for class</dd></div>
             <div><dt>Travel</dt><dd>Star map, the markers on the horizon, or keys 1–4 and M</dd></div>
             <div><dt>Replay</dt><dd>Journal → Replay your sky</dd></div>
           </dl>
@@ -2779,7 +2780,8 @@ void main(){
       }).join('');
     } else html += `<p>Three or more linked entries form a constellation. Keep logging and they'll start to line up.</p>`;
     html += `</div>`;
-    el.innerHTML = html;
+    el.innerHTML = `<div class="j-actions"><button type="button" class="btn" id="btnReport">Export project report</button></div>` + html;
+    $('#btnReport').onclick = exportReport;
     wireChart();
   }
 
@@ -2911,7 +2913,7 @@ void main(){
       (e.body || []).join('; '), e.bodyNote, e.trigger, (e.context || []).join('; '), e.contextNote, (e.baseline || []).join('; '), e.frequency, READ_NAMES[e.read] || '', e.reflection, (e.regulation || []).join('; '), e.regulationNote, e.example ? 'yes' : ''].map(q).join(','));
     offerFile(`inner-orrery-${stamp()}.csv`, [cols.join(','), ...rows].join('\n'), 'Journal exported as CSV.');
   }
-  function doCapture() {
+  function doCapture(req) {
     try {
       const c = document.createElement('canvas'); const w = Math.round(W * dpr), h = Math.round(H * dpr);
       c.width = w; c.height = h; const g = c.getContext('2d');
@@ -2921,10 +2923,79 @@ void main(){
       g.globalCompositeOperation = 'source-over';
       g.font = `500 ${Math.round(11 * dpr)}px "IBM Plex Mono", monospace`; g.fillStyle = 'rgba(236,232,223,0.55)';
       g.fillText(`INNER ORRERY · ${entries.length} ENTRIES · ${stamp()}`, 20 * dpr, h - 20 * dpr);
+      if (req && req.report) {
+        const sc = Math.min(1, 1600 / w); const r2 = document.createElement('canvas'); r2.width = Math.round(w * sc); r2.height = Math.round(h * sc);
+        r2.getContext('2d').drawImage(c, 0, 0, r2.width, r2.height);
+        offerFile(`inner-orrery-report-${stamp()}.html`, buildReport(r2.toDataURL('image/jpeg', 0.86)), 'Report saved. Open it in a browser to read or print.');
+        return;
+      }
       c.toBlob((blob) => { if (blob) offerFile(`inner-orrery-${stamp()}.png`, blob, 'Picture saved.'); else toast('The picture could not be made.'); }, 'image/png');
     } catch (_) { toast('The picture could not be made.'); }
   }
   $('#btnCapture').addEventListener('click', () => { captureReq = true; });
+
+  // ---------- Project report ----------
+  function buildReport(img) {
+    const list = [...entries].sort((a, b) => (a.createdAt || 0) - (b.createdAt || 0));
+    const n = list.length;
+    const fmtL = new Intl.DateTimeFormat(undefined, { year: 'numeric', month: 'long', day: 'numeric' });
+    const range = n ? `${fmtL.format(list[0].createdAt)} to ${fmtL.format(list[n - 1].createdAt)}` : '';
+    const sum = { body: 0, cognition: 0, emotion: 0 };
+    for (const e of list) for (const k in sum) sum[k] += +(e.weights || {})[k] || 0;
+    const tot = sum.body + sum.cognition + sum.emotion || 1;
+    const withAfter = list.filter((e) => e.after != null && e.intensity != null);
+    const avgDrop = withAfter.length ? withAfter.reduce((a, e) => a + (e.intensity - e.after), 0) / withAfter.length : 0;
+    const checked = list.filter((e) => e.read && e.read !== 'unsure');
+    const mis = checked.filter(isMisfire).length;
+    const ex = list.some((e) => e.example);
+    const pct = (k) => Math.round((sum[k] / tot) * 100);
+    const row = (e) => `<tr><td>${esc(e.createdAt ? fmtDay.format(e.createdAt) : '')}</td><td><b>${esc(e.label || '')}</b>${e.example ? ' <i>(example)</i>' : ''}</td><td>${esc(REGIONS[regionOf(e)].name)}</td><td class="n">${esc(e.intensity ?? '')}${e.after != null ? ' → ' + esc(e.after) : ''}</td><td>${esc([...(e.body || []), e.bodyNote].filter(Boolean).join(', '))}</td><td>${esc(e.trigger || '')}</td><td>${esc([...(e.context || []), e.contextNote].filter(Boolean).join(', '))}</td><td>${esc([...(e.baseline || []), FREQ_NAMES[e.frequency] || ''].filter(Boolean).join(', '))}</td><td>${esc([READ_NAMES[e.read] || '', e.reflection].filter(Boolean).join('. '))}</td><td>${esc([...(e.regulation || []), e.regulationNote].filter(Boolean).join(', '))}</td></tr>`;
+    const regionRows = PLACES.map((k) => { const c = list.filter((e) => regionOf(e) === k).length; return `<tr><td>${esc(REGIONS[k].name)}</td><td>${esc(REGIONS[k].quad)}</td><td class="n">${c}</td></tr>`; }).join('');
+    const tips = insights();
+    return `<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Inner Orrery report · ${esc(stamp())}</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Instrument+Serif&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
+<style>
+:root{color-scheme:light}body{margin:0;background:#fbfaf7;color:#1b1a17;font:15px/1.6 "IBM Plex Sans",Helvetica,Arial,sans-serif}
+main{max-width:860px;margin:0 auto;padding:48px 24px 64px}h1,h2{font-family:"Instrument Serif",Georgia,serif;font-weight:400;letter-spacing:-.01em}
+h1{font-size:46px;line-height:1;margin:0 0 10px}h2{font-size:28px;margin:44px 0 10px;padding-top:18px;border-top:1px solid #dedad2}
+.meta{color:#6b675f;margin:0 0 24px}figure{margin:0}figure img{width:100%;border-radius:6px;display:block;background:#000}figcaption{font-size:13px;color:#6b675f;margin-top:8px}
+dl{display:grid;grid-template-columns:170px 1fr;gap:8px 18px;margin:0}dt{font-weight:600}dd{margin:0;color:#3d3a34}ul.ins{padding-left:18px}ul.ins li{margin:6px 0}
+table{width:100%;border-collapse:collapse;font-size:13px}th,td{text-align:left;vertical-align:top;padding:8px 6px;border-top:1px solid #e3dfd6}th{font-weight:600;color:#6b675f}.n{text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}
+.wide{overflow-x:auto}.wide td:first-child{white-space:nowrap}.kpis{display:grid;grid-template-columns:repeat(4,1fr);border-top:1px solid #dedad2;border-bottom:1px solid #dedad2}.kpis div{padding:12px 0}.kpis div+div{padding-left:14px;border-left:1px solid #dedad2}.kpis b{display:block;font-size:24px;font-weight:500}.kpis span{font-size:13px;color:#6b675f}
+@media(max-width:640px){dl{grid-template-columns:1fr}.kpis{grid-template-columns:repeat(2,1fr)}}
+@media print{body{background:#fff}main{padding:0}h2{break-after:avoid}tr{break-inside:avoid}}
+</style></head><body><main>
+<h1>Inner Orrery</h1>
+<p class="meta">A Kaleidoscope Project journal: body, cognition and emotion, and how they interact.<br>${n} ${n === 1 ? 'entry' : 'entries'}${range ? ', ' + esc(range) : ''}. Report made ${esc(fmtL.format(Date.now()))}.${ex ? ' Entries marked “example” were sample data.' : ''}</p>
+${img ? `<figure><img src="${img}" alt="The Inner Orrery sky at the time of the report"><figcaption>The sky as it looked when this report was made. Each star is one entry; its color mixes body, cognition and emotion.</figcaption></figure>` : ''}
+<h2>The idea</h2>
+<p>Every feeling is logged with the seven parameters from class and becomes a star. Three beads, like the beads of a kaleidoscope, shape each one: <b>body</b> (physical sensation), <b>cognition</b> (thoughts and the story told about it) and <b>emotion</b> (the feeling itself). Each entry lands in one of four regions of space according to two dimensions from Russell's circumplex model of affect: valence (unpleasant to pleasant) and arousal (calm to intense).</p>
+<dl>
+<dt>Label</dt><dd>What the feeling was called in the moment.</dd>
+<dt>Bodily signature</dt><dd>What the body did, often before there were words for it.</dd>
+<dt>Trigger</dt><dd>What happened right before.</dd>
+<dt>Context</dt><dd>Where it happened and who was there.</dd>
+<dt>History and baseline</dt><dd>The state brought into the moment (sleep, hunger, stress) and how often it happens.</dd>
+<dt>Failure mode</dt><dd>Whether the read fit the situation: too strong, wrong label or wrong target.</dd>
+<dt>Regulation</dt><dd>What was done with it, and how strong it was afterwards.</dd>
+</dl>
+<h2>At a glance</h2>
+<div class="kpis"><div><b>${n}</b><span>entries</span></div><div><b>${checked.length ? Math.round((mis / checked.length) * 100) + '%' : '–'}</b><span>of checked reads misfired</span></div><div><b>${withAfter.length ? '−' + avgDrop.toFixed(1) : '–'}</b><span>average drop in intensity</span></div><div><b>${constellations.length}</b><span>${constellations.length === 1 ? 'constellation' : 'constellations'}</span></div></div>
+${tips.length ? `<h2>What the sky is saying</h2><ul class="ins">${tips.map((t) => `<li>${t}</li>`).join('')}</ul>` : ''}
+<h2>The three beads</h2>
+<p>Across all entries, body carried ${pct('body')}% of the weight, cognition ${pct('cognition')}% and emotion ${pct('emotion')}%.</p>
+<h2>Regions</h2>
+<table><thead><tr><th>Region</th><th>Kind of feeling</th><th class="n">Entries</th></tr></thead><tbody>${regionRows}</tbody></table>
+<h2>Every entry</h2>
+<div class="wide"><table><thead><tr><th>Date</th><th>Label</th><th>Region</th><th class="n">Intensity</th><th>Body</th><th>Trigger</th><th>Context</th><th>History</th><th>Read</th><th>Regulation</th></tr></thead><tbody>${list.map(row).join('')}</tbody></table></div>
+</main></body></html>`;
+  }
+  function exportReport() {
+    if (!entries.length) { toast('Log a few entries first, then export a report.'); return; }
+    if (panelOpen() && W <= 720) closePanel();
+    captureReq = { report: true };
+    if (!G) doCapture({ report: true });
+  }
 
   // ---------- Hidden track ----------
   const SONG_URL = 'hidden-track.mp3';
