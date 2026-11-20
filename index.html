@@ -84,6 +84,19 @@ button, input, textarea { font: inherit; color: inherit; }
 .linkbtn { background: none; border: 0; padding: 0; color: var(--dim); text-decoration: underline; text-decoration-color: var(--line-2); text-underline-offset: 3px; cursor: pointer; font-size: inherit; }
 .linkbtn:hover { color: var(--ink); text-decoration-color: currentColor; }
 
+.loc { display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 9px; margin: 10px 0 0; font-size: 13.5px; font-weight: 500; }
+.loc .sw { width: 7px; height: 7px; border-radius: 50%; background: var(--c); align-self: center; box-shadow: 0 0 8px var(--c); }
+.loc i { font-style: normal; font-weight: 400; color: var(--dim); }
+.arrive { position: absolute; z-index: 4; left: max(24px, env(safe-area-inset-left, 0px)); bottom: calc(env(safe-area-inset-bottom, 0px) + 62px); max-width: 32ch; pointer-events: none; opacity: 0; transform: translateY(10px); transition: opacity .9s ease, transform 1.2s cubic-bezier(.2,.8,.2,1); text-shadow: 0 2px 20px rgba(0,0,0,.9); }
+.arrive.show { opacity: 1; transform: none; }
+.arrive-k { margin: 0 0 10px; font-size: 12.5px; color: var(--c, var(--dim)); }
+.arrive h2 { margin: 0; font-family: var(--f-display); font-weight: 400; font-size: clamp(42px, 6vw, 76px); line-height: .92; letter-spacing: -.012em; }
+.arrive-b { margin: 14px 0 0; color: var(--dim); font-size: 14px; line-height: 1.6; }
+#app.panel-open .arrive { opacity: 0; }
+button.tag { font: inherit; font-size: 11px; line-height: 1; background: none; cursor: pointer; }
+.tag.place { color: var(--ink); border-color: var(--c); }
+.tag.place:hover { background: var(--hover); }
+
 /* ---------- toolbar ---------- */
 .ctl-col { display: flex; flex-direction: column; align-items: flex-end; gap: 10px; }
 .controls { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 8px; }
@@ -291,6 +304,7 @@ dl.params.keys > div { grid-template-columns: 84px 1fr; }
     <div class="row-top">
       <header class="brand">
         <h1><svg viewBox="0 0 24 24" aria-hidden="true"><ellipse cx="12" cy="13" rx="11" ry="3" fill="none" stroke="#f2b37a" stroke-width="1.3"/><path d="M5.6 12a6.4 5.6 0 0 1 12.8 0" fill="none" stroke="#ffe2bd" stroke-width="1.1"/><circle cx="12" cy="12" r="4.2" fill="#000" stroke="#fff1dc" stroke-width=".7"/></svg>Inner Orrery</h1>
+        <p class="loc" id="loc"></p>
         <p class="stats" id="stats" aria-live="polite"><span><b>–</b> signals</span></p>
         <p class="note hit" id="note">Loading your sky…</p>
       </header>
@@ -298,9 +312,10 @@ dl.params.keys > div { grid-template-columns: 84px 1fr; }
       <nav class="controls hit" aria-label="Sky controls">
         <button class="btn primary" id="btnLog" type="button" hidden>
           <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M8 3v10M3 8h10" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" fill="none"/></svg>
-          Log<span class="lbl-long">&nbsp;a signal</span>
+          <span>Log<span class="lbl-long"> a signal</span></span>
         </button>
         <div class="toolbar">
+        <button class="btn" id="btnMap" type="button" aria-pressed="false" aria-label="Star map"><svg viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="8" r="6.2" fill="none" stroke="currentColor" stroke-width="1.1"/><path d="M1.8 8h12.4M8 1.8v12.4" stroke="currentColor" stroke-width=".9" stroke-dasharray="1.4 1.6"/><circle cx="11" cy="5" r="1.2" fill="currentColor"/><circle cx="5.2" cy="10.6" r="1" fill="currentColor"/></svg><span class="lbl-long">Star map</span></button>
         <button class="btn" id="btnJournal" type="button" aria-pressed="false">Journal</button>
         <button class="btn" id="btnPatterns" type="button" aria-pressed="false">Patterns</button>
         <button class="btn" id="btnCapture" type="button" aria-label="Save a picture of the sky" hidden>
@@ -468,6 +483,15 @@ dl.params.keys > div { grid-template-columns: 84px 1fr; }
             <div><dt>Marks</dt><dd>A ring means you regulated it. A flickering corona means the read misfired.</dd></div>
           </dl>
         </div>
+        <div><h4>Four regions of space</h4>
+          <p class="lede">Every feeling is placed on two dimensions psychologists use to map emotion: valence, from unpleasant to pleasant, and arousal, from calm to intense. Together they form Russell's circumplex model of affect. Each quarter of it is a different place in space. Open the Star map to see every signal plotted on those two axes, then travel to a region.</p>
+          <dl class="params">
+            <div><dt>The Horizon</dt><dd>Intense and unpleasant. A black hole.</dd></div>
+            <div><dt>Ember Nebula</dt><dd>Intense and pleasant. A stellar nursery lit by a young cluster.</dd></div>
+            <div><dt>Tidepool</dt><dd>Calm and pleasant. One steady sun and a red-dwarf companion.</dd></div>
+            <div><dt>The Drift</dt><dd>Calm and unpleasant. A planetary nebula, the shell a dying star leaves behind.</dd></div>
+          </dl>
+        </div>
         <div><h4>The seven parameters</h4>
           <p class="lede">Label, bodily signature, trigger, context, history and baseline, failure mode, and regulation. Each log walks through all seven; only the label is required.</p>
         </div>
@@ -479,6 +503,7 @@ dl.params.keys > div { grid-template-columns: 84px 1fr; }
             <div><dt>Orbit</dt><dd>Drag, or the arrow keys</dd></div>
             <div><dt>Zoom</dt><dd>Scroll, pinch, or + and −</dd></div>
             <div><dt>Reset</dt><dd>Double-click, or 0</dd></div>
+            <div><dt>Travel</dt><dd>Star map, the markers on the horizon, or keys 1–4 and M</dd></div>
             <div><dt>Replay</dt><dd>Journal → Replay your sky</dd></div>
           </dl>
         </div>
@@ -487,6 +512,7 @@ dl.params.keys > div { grid-template-columns: 84px 1fr; }
     </div>
   </aside>
 
+  <div class="arrive" id="arrive" aria-live="polite"><p class="arrive-k" id="arriveK"></p><h2 id="arriveName"></h2><p class="arrive-b" id="arriveBlurb"></p></div>
   <div class="replay" id="replay" hidden><span class="rp-dot" aria-hidden="true"></span><span id="replayText" aria-live="polite">Replaying</span><button class="linkbtn" id="replayStop" type="button">Stop</button></div>
   <div class="loader" id="loader" aria-hidden="true"><span>Calibrating the horizon</span><i></i></div>
   <input type="file" id="fImport" accept=".json,application/json" hidden>
@@ -529,6 +555,25 @@ dl.params.keys > div { grid-template-columns: 84px 1fr; }
     { key: 'cognition', name: 'Cognition', r: 47.5, size: 1.6, phase: 4.6 },
   ];
   const MOON = { size: 0.42, dist: 4.8 };
+
+  // ---------- Regions of space: Russell's circumplex (valence x arousal) ----------
+  const REGIONS = {
+    horizon: { idx: 0, name: 'The Horizon', quad: 'Intense · unpleasant', blurb: 'Anxiety, anger, overwhelm. Feelings with a pull that is hard to climb out of, circling a black hole.', color: [255, 176, 112], anchor: [-40, -36], sky: [0, 0], skyGain: 1, light: [1, 0.77, 0.52], lightGain: 1, view: { rot: 0.9, el: 0.24, zoom: 1.15 } },
+    ember: { idx: 1, name: 'Ember Nebula', quad: 'Intense · pleasant', blurb: 'Excitement, pride, hope. A stellar nursery where new stars are still igniting.', color: [255, 128, 118], anchor: [40, -36], sky: [2.1, 0.5], skyGain: 0.85, light: [0.86, 0.9, 1], lightGain: 0.95, view: { rot: 2.2, el: 0.32, zoom: 1.1 } },
+    tide: { idx: 2, name: 'Tidepool', quad: 'Calm · pleasant', blurb: 'Gratitude, ease, contentment. A quiet system warmed by one steady sun.', color: [255, 214, 150], anchor: [40, 36], sky: [4.0, -0.4], skyGain: 1, light: [1, 0.93, 0.8], lightGain: 1.25, view: { rot: 0.4, el: 0.36, zoom: 1.1 } },
+    drift: { idx: 3, name: 'The Drift', quad: 'Calm · unpleasant', blurb: 'Sadness, loneliness, shame. The slow, glowing shell a star leaves behind when it is done burning.', color: [120, 206, 228], anchor: [-40, 36], sky: [1.0, 1.1], skyGain: 0.5, light: [0.72, 0.86, 1], lightGain: 0.5, view: { rot: 3.6, el: 0.3, zoom: 1.15 } },
+    map: { idx: 4, name: 'Star map', quad: '', blurb: '', color: [236, 232, 223], anchor: [0, 0], sky: [0.6, -0.9], skyGain: 0.55, light: [1, 1, 1], lightGain: 1, view: { rot: Math.PI / 2, el: 1.12, zoom: 1 } },
+  };
+  const PLACES = ['horizon', 'ember', 'tide', 'drift'];
+  function skyMat(yaw, pitch) {
+    const cy = Math.cos(yaw), sy = Math.sin(yaw), cp = Math.cos(pitch), sp = Math.sin(pitch);
+    return new Float32Array([cy, sy * sp, -sy * cp, 0, cp, sp, sy, -cy * sp, cy * cp]);
+  }
+  for (const k in REGIONS) REGIONS[k].rot = skyMat(REGIONS[k].sky[0], REGIONS[k].sky[1]);
+  function regionOf(e) { const v = +e.valence || 0, I = +e.intensity || 5; return I >= 6 ? (v > 0 ? 'ember' : 'horizon') : (v > 0 ? 'tide' : 'drift'); }
+  let region = 'horizon', lastPlace = 'horizon';
+  const savedViews = {};
+  let trav = null, warp = 0, mapHover = null;
 
   // ---------- State ----------
   let entries = [];
@@ -656,9 +701,10 @@ dl.params.keys > div { grid-template-columns: 84px 1fr; }
     let availW = W, availH = H, tx = W / 2, ty = H * 0.53;
     if (open && wide) { availW = W - Math.min(420, W); tx = availW / 2; }
     if (open && !wide) { availH = H * 0.34; ty = H * 0.25; }
+    if (region === 'map' && !(open && !wide)) ty = H * 0.56;
     const aspect = availW / availH;
-    const need = Math.max(Math.min(52 / aspect, 46), 47 * Math.sin(view.el) * 1.4 + 7, 15);
-    return { x: tx, y: ty, hh: availH / 2, tan: need / CAM_D / view.zoom };
+    const need = region === 'map' ? Math.max(Math.min(108 / aspect, 150), 102) : Math.max(Math.min(52 / aspect, 46), 47 * Math.sin(view.el) * 1.4 + 7, 15);
+    return { x: tx, y: ty, hh: availH / 2, tan: need / CAM_D / view.zoom / (1 + warp * 1.6) };
   }
   function project(P) {
     const d = [P[0] - cam.pos[0], P[1] - cam.pos[1], P[2] - cam.pos[2]];
@@ -697,6 +743,10 @@ uniform int uSteps, uNStars;
 uniform sampler2D uSky;
 uniform highp sampler2D uStars;
 uniform vec4 uPl[4];
+uniform int uRegion;
+uniform mat3 uSkyRot;
+uniform float uSkyGain, uLightGain;
+uniform vec3 uLightCol;
 #define PI 3.14159265359
 const float RIN = 3.0;
 const float ROUT = 15.5;
@@ -837,7 +887,7 @@ vec3 shadePlanet(int i, vec3 hp, vec3 n, vec3 rd){
   float ndl = dot(n, L);
   float ndv = max(dot(n, V), 0.0);
   float diff = smoothstep(-0.07, 1.0, ndl);
-  vec3 lightC = vec3(1.0, 0.77, 0.52) * 2.7 * (1.0 + 0.35*uPulse);
+  vec3 lightC = uLightCol * 2.7 * uLightGain * (1.0 + 0.35*uPulse);
   vec3 col = alb*lightC*diff + alb*vec3(0.018, 0.02, 0.028);
   if (i == 2){
     vec3 Hh = normalize(L + V);
@@ -860,7 +910,9 @@ vec4 planets(vec3 ro, vec3 rd, out float tHit){
   tHit = 1e9; int id = -1; float cov = 0.0; vec3 hp = vec3(0.0), nrm = vec3(0.0, 1.0, 0.0);
   vec3 glow = vec3(0.0);
   for (int i = 0; i < 4; i++){
-    vec4 s = uPl[i]; vec3 oc = ro - s.xyz; float tc = -dot(oc, rd);
+    vec4 s = uPl[i];
+    if (s.w <= 0.0) continue;
+    vec3 oc = ro - s.xyz; float tc = -dot(oc, rd);
     if (tc <= 0.0) continue;
     vec3 cpv = oc + rd*tc; float d = length(cpv); float pw = tc*PIX;
     float cv = clamp((s.w - d)/pw + 0.5, 0.0, 1.0);
@@ -878,7 +930,7 @@ vec4 planets(vec3 ro, vec3 rd, out float tHit){
   if (id >= 0) P = vec4(shadePlanet(id, hp, nrm, rd) * cov, cov);
   vec4 s = uPl[2];
   float dn = dot(rd, RN);
-  if (abs(dn) > 1e-4){
+  if (s.w > 0.0 && abs(dn) > 1e-4){
     float tr = dot(s.xyz - ro, RN) / dn;
     if (tr > 0.0 && (id < 0 || tr < tHit || cov < 1.0)){
       vec3 rp = ro + rd*tr; float a = ringA(length(rp - s.xyz)/s.w);
@@ -887,7 +939,7 @@ vec4 planets(vec3 ro, vec3 rd, out float tHit){
         vec3 oc = rp - s.xyz; float b = dot(oc, L); float c = dot(oc, oc) - s.w*s.w;
         float shadow = (b < 0.0 && b*b - c > 0.0) ? 0.1 : 1.0;
         float lit = 0.35 + 0.65*abs(dot(L, RN));
-        vec3 rc = vec3(0.86, 0.84, 0.8) * vec3(1.0, 0.78, 0.55) * 2.2 * shadow * lit;
+        vec3 rc = vec3(0.86, 0.84, 0.8) * uLightCol * uLightGain * 2.2 * shadow * lit;
         if (id < 0 || tr < tHit) { P = vec4(rc*a + P.rgb*(1.0 - a), a + P.a*(1.0 - a)); tHit = min(tHit, tr); }
         else P = vec4(P.rgb + rc*a*(1.0 - P.a), P.a + a*(1.0 - P.a));
       }
@@ -951,14 +1003,10 @@ vec3 sky(vec3 d){
   vec2 dx = dFdx(uv), dy = dFdy(uv), dx2 = dFdx(uv2), dy2 = dFdy(uv2);
   if (dot(dx2, dx2) < dot(dx, dx)) dx = dx2;
   if (dot(dy2, dy2) < dot(dy, dy)) dy = dy2;
-  return pow(textureGrad(uSky, uv, dx, dy).rgb, vec3(2.2)) * (1.2 + 0.25*uPulse);
+  return min(pow(textureGrad(uSky, uv, dx, dy).rgb, vec3(2.2)), vec3(0.35)) * (1.0 + 0.25*uPulse);
 }
 
-void main(){
-  vec2 uv = (gl_FragCoord.xy - uCenter) / uHalfH;
-  PIX = uTan / uHalfH;
-  vec3 rd = normalize(uFwd + (uv.x*uRight + uv.y*uUp) * uTan);
-  vec3 ro = uCam;
+vec3 horizonScene(vec3 ro, vec3 rd){
   float b = dot(ro, rd); float c = dot(ro, ro) - RINT*RINT; float h = b*b - c;
   float tE = h > 0.0 ? -b - sqrt(h) : -1.0;
   bool enters = tE > 0.0;
@@ -1016,11 +1064,193 @@ void main(){
     dirOut = normalize(rd*cos(dl) - (cp/bi)*sin(dl));
   }
   float px = max(length(fwidth(dirOut)), PIX*0.7);
-  vec3 sk = sky(dirOut) + pinStars(dirOut, px) * min(1.0, pow(1.25*PIX/px, 2.0));
+  vec3 dS = uSkyRot * dirOut;
+  vec3 sk = (sky(dS) + pinStars(dS, px) * min(1.0, pow(1.25*PIX/px, 2.0))) * uSkyGain;
   vec3 bg = captured ? vec3(0.0) : sk + starsBehind;
   bg = behind.rgb + (1.0 - behind.a)*bg;
   vec3 scene = col + (1.0 - al)*bg;
   scene = front.rgb + (1.0 - front.a)*(scene + starsFront);
+  return scene;
+}
+
+float hash12(vec2 p){ vec3 p3 = fract(vec3(p.xyx) * 0.1031); p3 += dot(p3, p3.yzx + 33.33); return fract((p3.x + p3.y) * p3.z); }
+
+// a point source with a telescope PSF (core, halo, four diffraction spikes)
+vec3 pointStar(vec3 ro, vec3 rd, vec3 pos, float B, vec3 c){
+  vec3 v = pos - ro; float t = dot(v, rd);
+  if (t <= 0.0) return vec3(0.0);
+  vec3 perp = v - rd*t;
+  float pd = length(perp) / t / PIX;
+  if (pd > 160.0) return vec3(0.0);
+  float sx = dot(perp, uRight)/t/PIX, sy = dot(perp, uUp)/t/PIX;
+  float s = max(0.9, (0.9 + 0.35*B) * uBS);
+  float core = exp(-pd*pd/(2.0*s*s));
+  float pc = pd / uBS;
+  float halo = 0.09 / pow(1.0 + pc*pc*0.025, 1.35);
+  float Ls = (14.0 + 20.0*B) * uBS;
+  float sw = 1.4 / max(uBS, 0.5);
+  float spike = (exp(-abs(sy)*sw - abs(sx)/Ls) + exp(-abs(sx)*sw - abs(sy)/Ls)) * 0.13;
+  return (c*(halo + spike) + mix(c, vec3(1.0), 0.6)*core*3.5) * B;
+}
+
+// ---------------- Ember Nebula: an emission nebula around a young cluster ----------------
+vec4 emberGas(vec3 ro, vec3 rd, float tMax){
+  const float R = 62.0;
+  float b = dot(ro, rd); float c = dot(ro, ro) - R*R; float h = b*b - c;
+  if (h < 0.0) return vec4(0.0, 0.0, 0.0, 1.0);
+  h = sqrt(h);
+  float t0 = max(-b - h, 0.0), t1 = min(-b + h, tMax);
+  if (t1 <= t0) return vec4(0.0, 0.0, 0.0, 1.0);
+  const int N = 40;
+  float dt = (t1 - t0) / float(N);
+  float t = t0 + dt * hash12(gl_FragCoord.xy);
+  vec3 col = vec3(0.0); float T = 1.0;
+  for (int i = 0; i < N; i++){
+    vec3 p = ro + rd*t;
+    float r = length(p);
+    vec3 q = p*0.04 + vec3(0.0, uTime*0.0025, 0.0);
+    float w = fbm3(q*1.7 + 3.0);
+    float d = fbm3(q*1.1 + vec3(w*1.1, w*0.6, -w*0.8));
+    float shape = smoothstep(R, R*0.3, r) * smoothstep(5.0, 17.0, r);
+    float dens = pow(max(d - 0.4, 0.0) * 3.4, 1.35) * shape;
+    float dust = smoothstep(0.5, 0.72, fbm3(q*2.6 + 11.0)) * shape;
+    float ill = 2.4 / (1.0 + (r/15.0)*(r/15.0)) + 0.12;
+    vec3 e = mix(vec3(1.0, 0.2, 0.19), vec3(0.22, 0.78, 0.74), smoothstep(0.48, 0.74, w));
+    e = mix(e, vec3(1.0, 0.72, 0.42), exp(-r/10.0));
+    col += T * e * dens * ill * dt * 0.034 * (1.0 + 0.6*uPulse);
+    T *= exp(-(dens*0.01 + dust*0.085) * dt);
+    if (T < 0.03) break;
+    t += dt;
+  }
+  return vec4(col, T);
+}
+vec3 emberCluster(vec3 ro, vec3 rd){
+  vec3 acc = vec3(0.0);
+  for (int i = 0; i < 7; i++){
+    float fi = float(i);
+    vec3 pos = (vec3(h13(vec3(fi, 1.0, 2.0)), h13(vec3(fi, 3.0, 4.0)), h13(vec3(fi, 5.0, 6.0))) - 0.5) * 7.0;
+    float B = 0.9 + 1.4*h13(vec3(fi, 7.0, 8.0));
+    vec3 c = mix(vec3(0.62, 0.74, 1.0), vec3(1.0, 0.95, 0.9), h13(vec3(fi, 9.0, 1.0)));
+    acc += pointStar(ro, rd, pos, B, c);
+  }
+  return acc;
+}
+
+// ---------------- Tidepool: a steady sun with a red-dwarf companion ----------------
+vec4 sunBody(vec3 ro, vec3 rd, vec3 cen, float R, float temp, float gain, float spin, out float tHit){
+  tHit = 1e9;
+  vec3 oc = ro - cen; float tc = -dot(oc, rd);
+  if (tc <= 0.0) return vec4(0.0);
+  vec3 cpv = oc + rd*tc; float d = length(cpv); float pw = tc*PIX;
+  float cov = clamp((R - d)/pw + 0.5, 0.0, 1.0);
+  vec4 S = vec4(0.0);
+  if (cov > 0.0){
+    float th = sqrt(max(R*R - d*d, 0.0));
+    vec3 n = normalize(oc + rd*(tc - th));
+    float mu = max(dot(n, -rd), 0.0);
+    float limb = 1.0 - 0.6*(1.0 - pow(mu, 0.55));
+    vec3 q = rotY(n, uTime*spin);
+    float gran = fbm3(q*30.0 + uTime*0.02);
+    float spots = smoothstep(0.7, 0.76, fbm3(q*4.5 + 2.0));
+    vec3 c = blackbody(temp * (0.93 + 0.12*gran) * (1.0 - 0.3*spots)) * limb * gain * (1.0 - 0.75*spots) * (1.0 + 0.25*uPulse);
+    S = vec4(c*cov, cov); tHit = tc - th;
+  }
+  if (d > R*0.97){
+    float x = (d - R) / R;
+    float ang = atan(dot(cpv, uUp), dot(cpv, uRight));
+    float streak = 0.55 + 0.9*fbm3(vec3(cos(ang)*2.0, sin(ang)*2.0, x*1.5 + uTime*0.01));
+    vec3 cor = blackbody(temp) * (0.65/(1.0 + x*x*34.0) + 0.1*exp(-x*2.2)*streak) * gain * 0.16;
+    S.rgb += cor * (1.0 - S.a);
+  }
+  return S;
+}
+
+// ---------------- The Drift: a planetary nebula around a white dwarf ----------------
+vec4 driftGas(vec3 ro, vec3 rd, float tMax){
+  const float R = 34.0;
+  float b = dot(ro, rd); float c = dot(ro, ro) - R*R; float h = b*b - c;
+  if (h < 0.0) return vec4(0.0, 0.0, 0.0, 1.0);
+  h = sqrt(h);
+  float t0 = max(-b - h, 0.0), t1 = min(-b + h, tMax);
+  if (t1 <= t0) return vec4(0.0, 0.0, 0.0, 1.0);
+  const int N = 40;
+  float dt = (t1 - t0) / float(N);
+  float t = t0 + dt * hash12(gl_FragCoord.xy + 7.0);
+  vec3 col = vec3(0.0); float T = 1.0;
+  for (int i = 0; i < N; i++){
+    vec3 p = ro + rd*t;
+    vec3 s = p / vec3(16.0, 11.5, 16.0);
+    float r = length(s);
+    float n = fbm3(p*0.11 + vec3(4.0, uTime*0.002, 1.0));
+    float fil = 0.18 + 1.5*n*n;
+    float shell = exp(-pow((r - 1.0)/0.13, 2.0)) * fil;
+    float inner = exp(-pow(r/0.8, 2.0)) * 0.16 * (0.5 + 0.8*n);
+    float halo = exp(-pow((r - 1.55)/0.3, 2.0)) * 0.035 * fil;
+    vec3 e = mix(vec3(0.05, 0.55, 0.78), vec3(1.0, 0.22, 0.26), smoothstep(0.86, 1.08, r));
+    e = mix(e, vec3(0.9, 0.35, 0.4), smoothstep(1.3, 1.6, r));
+    vec3 ein = vec3(0.05, 0.62, 0.72);
+    col += T * (e*(shell + halo) + ein*inner) * dt * 0.032 * (1.0 + 0.5*uPulse);
+    T *= exp(-shell*0.012*dt);
+    t += dt;
+  }
+  return vec4(col, T);
+}
+
+// ---------------- Star map: a face-on spiral galaxy ----------------
+vec4 galaxy(vec3 ro, vec3 rd){
+  if (abs(rd.y) < 1e-4) return vec4(0.0, 0.0, 0.0, 1.0);
+  float t = -ro.y / rd.y;
+  if (t <= 0.0) return vec4(0.0, 0.0, 0.0, 1.0);
+  vec3 p = ro + rd*t; float r = length(p.xz);
+  if (r > 150.0) return vec4(0.0, 0.0, 0.0, 1.0);
+  float th = atan(p.z, p.x);
+  float lr = log(r/5.0 + 1.0);
+  float n = fbm3(vec3(p.xz*0.045, 1.0));
+  float arm = 0.5 + 0.5*cos(2.0*th - 5.0*lr + n*1.2);
+  float arms = pow(arm, 3.5) * (0.45 + 1.0*n);
+  float lane = pow(0.5 + 0.5*cos(2.0*th - 5.0*lr - 0.6 + n*1.2), 6.0) * smoothstep(6.0, 22.0, r) * (0.45 + 0.7*fbm3(vec3(p.xz*0.14, 7.0)));
+  float bulge = exp(-r/6.5);
+  float disk = exp(-r/36.0) * smoothstep(150.0, 90.0, r);
+  vec3 c = vec3(1.0, 0.8, 0.56)*bulge*2.6 + vec3(0.72, 0.8, 1.0)*disk*(0.1 + arms*0.95);
+  float hii = arms * smoothstep(0.66, 0.82, fbm3(vec3(p.xz*0.32, 3.0))) * disk;
+  c += vec3(1.0, 0.36, 0.5)*hii*1.4;
+  c *= 1.0 - lane*0.7;
+  float a = clamp(bulge*1.4 + disk*0.55, 0.0, 0.92);
+  return vec4(c*(0.5 + 0.2*uPulse), 1.0 - a*0.55);
+}
+
+void main(){
+  vec2 uv = (gl_FragCoord.xy - uCenter) / uHalfH;
+  PIX = uTan / uHalfH;
+  vec3 rd = normalize(uFwd + (uv.x*uRight + uv.y*uUp) * uTan);
+  vec3 ro = uCam;
+  if (uRegion == 0) { o = vec4(horizonScene(ro, rd) * uOut, 1.0); return; }
+  vec3 dS = uSkyRot * rd;
+  vec3 sk = (sky(dS) + pinStars(dS, PIX)) * uSkyGain;
+  if (uRegion == 4) {
+    vec4 g = galaxy(ro, rd);
+    o = vec4((g.rgb + g.a*sk*0.7) * uOut, 1.0);
+    return;
+  }
+  float tF; vec4 front = planets(ro, rd, tF);
+  vec3 behind = sk + entryStars(ro, rd, 1e9);
+  vec4 vol = vec4(0.0, 0.0, 0.0, 1.0);
+  if (uRegion == 1) {
+    vol = emberGas(ro, rd, tF);
+    behind += emberCluster(ro, rd);
+  } else if (uRegion == 2) {
+    float tS, tC;
+    vec4 S = sunBody(ro, rd, vec3(0.0), 4.4, 5800.0, 7.0, 0.012, tS);
+    vec3 cpos = vec3(cos(uTime*0.045)*11.5, 0.8, sin(uTime*0.045)*11.5);
+    vec4 C = sunBody(ro, rd, cpos, 1.0, 3300.0, 3.2, 0.03, tC);
+    if (tC < tS) S = C + (1.0 - C.a)*S; else S = S + (1.0 - S.a)*C;
+    float tSun = min(tS, tC);
+    if (tSun < tF) front = S + (1.0 - S.a)*front; else front = front + (1.0 - front.a)*S;
+  } else if (uRegion == 3) {
+    vol = driftGas(ro, rd, tF);
+    behind += pointStar(ro, rd, vec3(0.0), 2.4, vec3(0.78, 0.88, 1.0));
+  }
+  vec3 scene = vol.rgb + vol.a*(front.rgb + (1.0 - front.a)*behind);
   o = vec4(scene * uOut, 1.0);
 }`;
 
@@ -1054,8 +1284,8 @@ void main(){
 precision highp float;
 in vec2 vUv; out vec4 o;
 uniform sampler2D uScene, uB1, uB2, uS;
-uniform float uIn, uTime, uExposure, uFade, uPulse;
-uniform vec2 uScreen;
+uniform float uIn, uTime, uExposure, uFade, uPulse, uWarp;
+uniform vec2 uScreen, uCtrUV;
 #define PI 3.14159265359
 float hash12(vec2 p){ vec3 p3 = fract(vec3(p.xyx) * 0.1031); p3 += dot(p3, p3.yzx + 33.33); return fract((p3.x + p3.y) * p3.z); }
 vec3 aces(vec3 x){ return clamp((x*(2.51*x + 0.03)) / (x*(2.43*x + 0.59) + 0.14), 0.0, 1.0); }
@@ -1068,11 +1298,17 @@ void main(){
   c.r = texture(uScene, uv - d*ca).r;
   c.g = texture(uScene, uv).g;
   c.b = texture(uScene, uv + d*ca).b;
+  if (uWarp > 0.002){
+    vec2 dir = uv - uCtrUV; vec3 acc = vec3(0.0);
+    for (int i = 0; i < 18; i++){ float k = 1.0 - uWarp*0.6*float(i)/17.0; acc += texture(uScene, uCtrUV + dir*k).rgb; }
+    c = mix(c, acc/18.0, smoothstep(0.0, 0.3, uWarp)) * (1.0 + uWarp*1.3);
+    c += vec3(0.55, 0.7, 1.0) * pow(uWarp, 5.0) * 0.6;
+  }
   c *= uIn;
   vec3 bl = texture(uB1, uv).rgb * 0.55 + texture(uB2, uv).rgb * 0.85;
   vec3 st = texture(uS, uv).rgb;
   c += bl * uIn * (0.36 + 0.3*uPulse);
-  c += st * uIn * vec3(0.5, 0.68, 1.0) * (0.16 + 0.2*uPulse);
+  c += st * uIn * vec3(0.5, 0.66, 1.0) * (0.04 + 0.1*uPulse);
   c *= uExposure;
   c = aces(c);
   vec2 vd = (fc / uScreen - 0.5) * vec2(uScreen.x / uScreen.y, 1.0);
@@ -1114,9 +1350,9 @@ void main(){
       const psi = rnd() * TAU; const o = gauss() * 0.11;
       const [x, y] = toUV(bandPoint(psi, o));
       const near = Math.exp(-Math.pow(Math.atan2(Math.sin(psi - core), Math.cos(psi - core)), 2) / 0.5);
-      const r = (30 + rnd() * 110) * (1 + near * 0.8);
+      const r = (30 + rnd() * 90) * (1 + near * 0.5);
       const warm = rnd() < 0.55 + near * 0.3;
-      const a = (0.03 + rnd() * 0.045) * (0.55 + near * 1.2);
+      const a = (0.012 + rnd() * 0.02) * (0.6 + near * 0.7);
       blob(x, y, r, warm ? `rgba(255,214,170,${a})` : `rgba(170,190,255,${a * 0.8})`, stretch(y));
     }
     // emission nebulae
@@ -1254,6 +1490,8 @@ void main(){
     gl.uniform1f(sp.u.uTan, tanH); gl.uniform1f(sp.u.uTime, simT); gl.uniform1f(sp.u.uOut, outScale); gl.uniform1f(sp.u.uPlRot, simT * 0.05);
     gl.uniform1i(sp.u.uSteps, STEPS[G.level]);
     gl.uniform4fv(sp.u.uPl, planetWorld);
+    const RG = REGIONS[region];
+    gl.uniform1i(sp.u.uRegion, RG.idx); gl.uniformMatrix3fv(sp.u.uSkyRot, false, RG.rot); gl.uniform1f(sp.u.uSkyGain, RG.skyGain); gl.uniform1f(sp.u.uLightGain, RG.lightGain); gl.uniform3fv(sp.u.uLightCol, RG.light);
     gl.uniform1i(sp.u.uNStars, nStars); gl.uniform1f(sp.u.uBS, bs); gl.uniform1f(sp.u.uPulse, pulse);
     bindTex(sp, 'uSky', 0, G.skyTex); bindTex(sp, 'uStars', 1, G.starTex);
     gl.drawArrays(gl.TRIANGLES, 0, 3);
@@ -1280,12 +1518,14 @@ void main(){
     pass(cp, null, glCanvas.width, glCanvas.height);
     bindTex(cp, 'uScene', 0, T.scene.tex); bindTex(cp, 'uB1', 1, T.a1.tex); bindTex(cp, 'uB2', 2, T.a2.tex); bindTex(cp, 'uS', 3, T.s1.tex);
     gl.uniform1f(cp.u.uFade, fadeEase()); gl.uniform1f(cp.u.uPulse, pulse);
+    gl.uniform1f(cp.u.uWarp, warp); gl.uniform2f(cp.u.uCtrUV, cx / W, 1 - cy / H);
     gl.uniform1f(cp.u.uIn, inScale); gl.uniform1f(cp.u.uTime, simT);
     gl.uniform1f(cp.u.uExposure, 1.0);
     gl.uniform2f(cp.u.uScreen, glCanvas.width, glCanvas.height);
     gl.drawArrays(gl.TRIANGLES, 0, 3);
   }
   function planetWorld() {
+    if (region === 'map') return [[0, -999, 0, 0], [0, -999, 0, 0], [0, -999, 0, 0], [0, -999, 0, 0]];
     const out = PLANETS.map((pl) => { const th = pl.phase + (ORB / Math.pow(pl.r, 1.5)) * simT; return [pl.r * Math.cos(th), 0, pl.r * Math.sin(th), pl.size]; });
     const em = out[1]; const a = simT * 0.22 + 1.3;
     out.push([em[0] + MOON.dist * Math.cos(a), 0.9 * Math.sin(a), em[2] + MOON.dist * Math.sin(a), MOON.size]);
@@ -1296,7 +1536,7 @@ void main(){
     let n = 0;
     const list = entries.length > 128 ? [...entries].sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0)).slice(0, 128) : entries;
     for (const e of list) {
-      if (!shown(e.id)) continue;
+      if (!shown(e.id) || regionOf(e) !== region) continue;
       const d = derived.get(e.id); if (!d) continue;
       const r = entryRadius(e, d); const P = entryAt(d, d.phase + d.omega * simT, r);
       const I = clamp(+e.intensity || 5, 1, 10);
@@ -1451,7 +1691,7 @@ void main(){
 
   function drawSelectionOrbit(g) {
     if (!selected) return;
-    const e = entries.find((x) => x.id === selected); const d = e && derived.get(e.id); if (!d) return;
+    const e = entries.find((x) => x.id === selected); const d = e && derived.get(e.id); if (!d || regionOf(e) !== region) return;
     g.save(); g.setLineDash([2, 5]); g.strokeStyle = rgb(d.color, 0.35); g.lineWidth = 0.8;
     g.beginPath(); let started = false;
     for (let i = 0; i <= 120; i++) { const p = project(entryAt(d, (i / 120) * TAU, d.r)); if (!p) { started = false; continue; } if (!started) { g.moveTo(p.x, p.y); started = true; } else g.lineTo(p.x, p.y); }
@@ -1468,19 +1708,161 @@ void main(){
     g.restore();
   }
 
+  const beaconPos = new Map();
+  const mapHits = [];
+  function drawBeacons(g, now) {
+    const here = REGIONS[region].anchor;
+    g.save();
+    for (const key of PLACES) {
+      if (key === region) continue;
+      const R = REGIONS[key];
+      const dx = R.anchor[0] - here[0], dz = R.anchor[1] - here[1], L = Math.hypot(dx, dz) || 1;
+      const a = -view.el + 0.11;
+      const dir = [(dx / L) * Math.cos(a), Math.sin(a), (dz / L) * Math.cos(a)];
+      let p = project([cam.pos[0] + dir[0] * 4000, cam.pos[1] + dir[1] * 4000, cam.pos[2] + dir[2] * 4000]);
+      const panelW = panelOpen() && W > 720 ? Math.min(420, W) : 0;
+      const minX = 56, maxX = W - panelW - 190;
+      let edge = 0;
+      if (!p || p.x < minX || p.x > maxX) {
+        const sx = dot3(dir, cam.right);
+        edge = sx >= 0 ? 1 : -1;
+        p = { x: edge > 0 ? maxX : minX, y: H * 0.5 + (R.idx - 1.5) * 46 };
+      }
+      if (p.y < 70 || p.y > H - 70) continue;
+      const c = R.color, k = 0.7 + 0.3 * Math.sin(now / 900 + R.idx * 1.7), hov = mapHover === key;
+      g.globalCompositeOperation = 'lighter';
+      const gr = g.createRadialGradient(p.x, p.y, 0, p.x, p.y, 18);
+      gr.addColorStop(0, rgb(c, (hov ? 0.75 : 0.5) * k)); gr.addColorStop(1, rgb(c, 0));
+      g.fillStyle = gr; g.beginPath(); g.arc(p.x, p.y, 18, 0, TAU); g.fill();
+      g.globalCompositeOperation = 'source-over';
+      g.strokeStyle = rgb(c, hov ? 1 : 0.8); g.lineWidth = 1;
+      g.beginPath();
+      if (edge > 0) { g.moveTo(p.x - 4, p.y - 6); g.lineTo(p.x + 3, p.y); g.lineTo(p.x - 4, p.y + 6); }
+      else if (edge < 0) { g.moveTo(p.x + 4, p.y - 6); g.lineTo(p.x - 3, p.y); g.lineTo(p.x + 4, p.y + 6); }
+      else { g.moveTo(p.x, p.y - 6); g.lineTo(p.x + 6, p.y); g.lineTo(p.x, p.y + 6); g.lineTo(p.x - 6, p.y); g.closePath(); }
+      g.stroke();
+      const n = entries.filter((e) => regionOf(e) === key).length;
+      g.shadowColor = 'rgba(0,0,0,0.9)'; g.shadowBlur = 6;
+      g.font = '500 12px "IBM Plex Sans", system-ui, sans-serif'; g.fillStyle = hov ? 'rgba(244,240,232,1)' : 'rgba(233,230,223,0.82)';
+      g.fillText(R.name, p.x + 13, p.y + 1);
+      const w = g.measureText(R.name).width;
+      g.font = '400 11px "IBM Plex Sans", system-ui, sans-serif'; g.fillStyle = 'rgba(155,151,143,0.85)';
+      g.fillText(`${n} ${n === 1 ? 'signal' : 'signals'} · travel`, p.x + 13, p.y + 16);
+      g.shadowBlur = 0;
+      beaconPos.set(key, { x: p.x, y: p.y, w: Math.max(w, 90) + 20 });
+    }
+    g.restore();
+  }
+  function mapPoint(e) {
+    const v = clamp(+e.valence || 0, -5, 5), I = clamp(+e.intensity || 5, 1, 10);
+    return [v * 13 + (hash(e.id) - 0.5) * 6, 0.5, -(I - 5.5) * 12.5 + (hash(e.id + 'z') - 0.5) * 6];
+  }
+  function drawMap(g, now) {
+    const land = W >= H;
+    g.save();
+    g.strokeStyle = 'rgba(233,230,223,0.16)'; g.lineWidth = 1; g.setLineDash([3, 6]);
+    const line = (a, b) => { const p = project(a), q = project(b); if (!p || !q) return; g.beginPath(); g.moveTo(p.x, p.y); g.lineTo(q.x, q.y); g.stroke(); };
+    line([-80, 0, 0], [80, 0, 0]); line([0, 0, -70], [0, 0, 70]);
+    g.setLineDash([]);
+    for (let v = -5; v <= 5; v++) { if (!v) continue; const p = project([v * 13, 0, 0]); if (p) { g.fillStyle = 'rgba(233,230,223,0.22)'; g.fillRect(p.x - 0.5, p.y - 3, 1, 6); } }
+    g.shadowColor = 'rgba(0,0,0,0.9)'; g.shadowBlur = 6;
+    const label = (P, text, align, dy) => { const p = project(P); if (!p) return; g.font = '500 12px "IBM Plex Sans", system-ui, sans-serif'; g.fillStyle = 'rgba(155,151,143,0.95)'; g.textAlign = align; g.fillText(text, p.x, p.y + (dy || 0)); };
+    const ax = land ? 86 : 64;
+    label([ax, 0, 0], 'Pleasant', land ? 'left' : 'right', land ? 4 : -8);
+    label([-ax, 0, 0], 'Unpleasant', land ? 'right' : 'left', land ? 4 : -8);
+    label([0, 0, -76], 'Intense', 'center', 0);
+    label([0, 0, 80], 'Calm', 'center', 10);
+    for (const key of PLACES) {
+      const R = REGIONS[key];
+      const p = project([Math.sign(R.anchor[0]) * (land ? 74 : 55), 0, Math.sign(R.anchor[1]) * 64]); if (!p) continue;
+      const n = entries.filter((e) => regionOf(e) === key).length, hov = mapHover === key;
+      const align = (R.anchor[0] < 0) === land ? 'right' : 'left';
+      g.textAlign = align;
+      g.font = `400 ${land ? 26 : 21}px "Instrument Serif", serif`; g.fillStyle = hov ? 'rgba(250,246,238,1)' : 'rgba(233,230,223,0.88)';
+      g.fillText(R.name, p.x, p.y);
+      const w1 = g.measureText(R.name).width;
+      g.font = '400 11.5px "IBM Plex Sans", system-ui, sans-serif'; g.fillStyle = rgb(R.color, hov ? 1 : 0.85);
+      const sub = land ? `${R.quad} · ${n} ${n === 1 ? 'signal' : 'signals'}` : `${n} ${n === 1 ? 'signal' : 'signals'}`;
+      g.fillText(sub, p.x, p.y + 18);
+      const w = Math.max(w1, g.measureText(sub).width) + 8;
+      mapHits.push({ id: key, x: align === 'left' ? p.x - 4 : p.x - w + 4, y: p.y - 26, w, h: 50 });
+    }
+    g.textAlign = 'left'; g.shadowBlur = 0;
+    g.globalCompositeOperation = 'lighter';
+    for (const e of entries) {
+      if (!shown(e.id)) continue;
+      const d = derived.get(e.id); if (!d) continue;
+      const p = project(mapPoint(e)); if (!p) continue;
+      const born = bornAt.get(e.id); let k = 1;
+      if (born != null) { k = clamp((now - born) / 900, 0, 1); if (now - born > 3400) bornAt.delete(e.id); }
+      const s = (2 + clamp(+e.intensity || 5, 1, 10) * 0.25) * (0.3 + 0.7 * k) * (1 + pulse * 0.2);
+      const gr = g.createRadialGradient(p.x, p.y, 0, p.x, p.y, s * 5);
+      gr.addColorStop(0, rgb(d.color, 0.55 * k)); gr.addColorStop(1, rgb(d.color, 0));
+      g.fillStyle = gr; g.beginPath(); g.arc(p.x, p.y, s * 5, 0, TAU); g.fill();
+      g.fillStyle = `rgba(255,255,255,${0.92 * k})`; g.beginPath(); g.arc(p.x, p.y, Math.max(1, s * 0.42), 0, TAU); g.fill();
+      if (selected === e.id || hover === e.id) {
+        g.globalCompositeOperation = 'source-over';
+        g.strokeStyle = 'rgba(236,232,223,0.85)'; g.lineWidth = 1; g.beginPath(); g.arc(p.x, p.y, s * 2.2 + 5, 0, TAU); g.stroke();
+        g.font = '500 12px "IBM Plex Sans", system-ui, sans-serif'; g.fillStyle = 'rgba(244,240,232,0.95)'; g.shadowColor = 'rgba(0,0,0,0.9)'; g.shadowBlur = 6;
+        g.fillText(e.label || 'Unnamed', p.x + s * 2.2 + 10, p.y + 4); g.shadowBlur = 0;
+        g.globalCompositeOperation = 'lighter';
+      }
+      screenPos.set(e.id, { x: p.x, y: p.y, s: 4, hidden: false });
+    }
+    g.restore();
+  }
+
+  // ---------- Travel ----------
+  function travel(to, then) {
+    if (!REGIONS[to]) return;
+    if (to === region && !trav) { if (then) then(); return; }
+    if (trav) { trav.to = to; trav.then = then; return; }
+    intro = null; vel.rot = vel.el = 0; hover = null; mapHover = null; hideTip();
+    trav = { to, then, t0: performance.now(), dur: reduceMotion ? 700 : 2300, switched: false };
+  }
+  function arrive(to) {
+    savedViews[region] = { rot: view.rot, el: view.el, zoom: view.zoom };
+    region = to;
+    if (to !== 'map') lastPlace = to;
+    const v = savedViews[to] || REGIONS[to].view;
+    view.rot = v.rot; view.el = v.el; view.zoom = v.zoom;
+    const tnow = performance.now();
+    for (const id of [...bornAt.keys()]) bornAt.set(id, tnow);
+    $('#btnMap').setAttribute('aria-pressed', String(to === 'map'));
+    updateLocation(); showArrival(to);
+  }
+  function updateLocation() {
+    const el = $('#loc'); if (!el) return;
+    if (region === 'map') { el.innerHTML = '<span class="sw" style="--c:rgb(236,232,223)"></span><span>Star map</span><i>every signal by valence and arousal</i>'; return; }
+    const R = REGIONS[region];
+    const n = entries.filter((e) => regionOf(e) === region).length;
+    el.innerHTML = `<span class="sw" style="--c:${rgb(R.color)}"></span><span>${esc(R.name)}</span><i>${esc(R.quad.toLowerCase())} · ${n ? n + (n === 1 ? ' signal' : ' signals') : 'no signals yet'}</i>`;
+  }
+  let arriveTimer = null;
+  function showArrival(to) {
+    const el = $('#arrive'); const R = REGIONS[to];
+    clearTimeout(arriveTimer);
+    if (to === 'map') { el.classList.remove('show'); return; }
+    el.style.setProperty('--c', rgb(R.color));
+    $('#arriveK').textContent = R.quad; $('#arriveName').textContent = R.name; $('#arriveBlurb').textContent = R.blurb;
+    el.classList.remove('show'); void el.offsetWidth; el.classList.add('show');
+    arriveTimer = setTimeout(() => el.classList.remove('show'), 5600);
+  }
+
   function drawOverlay(g, now) {
     g.setTransform(dpr, 0, 0, dpr, 0, 0);
     g.globalCompositeOperation = 'source-over'; g.globalAlpha = 1;
     if (G || glPending) g.clearRect(0, 0, W, H);
-    else { g.drawImage(fbBg, 0, 0, W, H); drawFallbackHole(g); }
-    g.globalAlpha = G ? fadeEase() : (glPending ? 0 : 1);
+    else { g.drawImage(fbBg, 0, 0, W, H); if (region === 'horizon') drawFallbackHole(g); }
+    g.globalAlpha = (G ? fadeEase() : (glPending ? 0 : 1)) * (1 - warp);
+    screenPos.clear(); planetPos.clear(); beaconPos.clear(); mapHits.length = 0;
+    if (region === 'map') { drawMap(g, now); return; }
     const origin = project([0, 0, 0]);
     const k0 = origin ? origin.k : 1;
-    const shadowR = (G ? 17 : SHADOW_B * 1.08) * k0;
-    screenPos.clear(); planetPos.clear();
+    const shadowR = region === 'horizon' ? (G ? 17 : SHADOW_B * 1.08) * k0 : 0;
     const items = [];
     for (const e of entries) {
-      if (!shown(e.id)) continue;
+      if (!shown(e.id) || regionOf(e) !== region) continue;
       const d = derived.get(e.id); if (!d) continue;
       const r = entryRadius(e, d);
       const th = d.phase + d.omega * simT;
@@ -1495,6 +1877,7 @@ void main(){
       const hidden = origin && p.depth > 0 && Math.hypot(p.x - origin.x, p.y - origin.y) < shadowR;
       planetPos.set(pl.key, { x: p.x, y: p.y, r: pl.size * p.k, hidden });
     }
+    drawBeacons(g, now);
     drawSelectionOrbit(g);
     drawEdges(g);
     for (const it of items) if (!it.hidden) drawTrail(g, it.e, it.d, it.r, it.th, selected && selected !== it.e.id ? 0.4 : 1);
@@ -1523,9 +1906,15 @@ void main(){
       view.rot += vel.rot * dt; view.el = clamp(view.el + vel.el * dt, 0.035, 1.35);
       const k = Math.exp(-dt * 3.2); vel.rot *= k; vel.el *= k;
     }
-    if (!intro && !drag && !pinch && !reduceMotion && now - lastInteract > 20000) view.rot += dt * 0.012;
+    if (trav) {
+      const pr = clamp((now - trav.t0) / trav.dur, 0, 1);
+      warp = Math.sin(pr * Math.PI);
+      if (pr >= 0.5 && !trav.switched) { trav.switched = true; arrive(trav.to); }
+      if (pr >= 1) { const fn = trav.then; trav = null; warp = 0; if (fn) fn(); }
+    }
+    if (!intro && !drag && !pinch && !reduceMotion && region !== 'map' && now - lastInteract > 20000) view.rot += dt * 0.012;
     if (replay) {
-      if (!drag && !reduceMotion) view.rot += dt * 0.03;
+      if (!drag && !reduceMotion && region !== 'map') view.rot += dt * 0.03;
       const k = Math.floor((now - replay.t0) / replay.step);
       while (replay.idx < replay.order.length && replay.idx <= k) {
         const e = replay.order[replay.idx++];
@@ -1575,6 +1964,8 @@ void main(){
     let best = null, bd = Infinity;
     for (const [id, p] of screenPos) { if (p.hidden) continue; const d = Math.hypot(p.x - x, p.y - y); const lim = Math.max(14, p.s * 2.8); if (d < lim && d < bd) { bd = d; best = { kind: 'star', id }; } }
     if (!best) for (const [key, p] of planetPos) { if (!p.hidden && Math.hypot(p.x - x, p.y - y) < Math.max(14, p.r * 1.5)) best = { kind: 'planet', id: key }; }
+    if (!best) for (const [key, p] of beaconPos) { if (x > p.x - 16 && x < p.x + p.w && y > p.y - 16 && y < p.y + 22) best = { kind: 'beacon', id: key }; }
+    if (!best) for (const m of mapHits) { if (x >= m.x && x <= m.x + m.w && y >= m.y && y <= m.y + m.h) best = { kind: 'region', id: m.id }; }
     return best;
   }
   const pointers = new Map();
@@ -1611,7 +2002,8 @@ void main(){
     const h = hit(x, y);
     fx.classList.toggle('pointing', !!h);
     hover = h && h.kind === 'star' ? h.id : null;
-    if (h) showTip(h, x, y); else hideTip();
+    mapHover = h && (h.kind === 'region' || h.kind === 'beacon') ? h.id : null;
+    if (h && h.kind === 'star') showTip(h, x, y); else if (h && h.kind === 'planet') showTip(h, x, y); else hideTip();
   });
   const endDrag = (ev) => {
     pointers.delete(ev.pointerId);
@@ -1620,11 +2012,12 @@ void main(){
     const wasClick = !drag.moved;
     if (drag.moved && performance.now() - drag.lt < 80) { vel.rot = clamp(-drag.vx * 5, -4, 4); vel.el = clamp(drag.vy * 4, -2, 2); }
     drag = null; fx.classList.remove('dragging');
-    if (wasClick) {
+    if (wasClick && !trav) {
       const rect = fx.getBoundingClientRect();
       const h = hit(ev.clientX - rect.left, ev.clientY - rect.top);
       if (h && h.kind === 'star') select(h.id);
       else if (h && h.kind === 'planet') openPanel('patterns');
+      else if (h && (h.kind === 'beacon' || h.kind === 'region')) travel(h.id);
       else if (selected) { selected = null; if (currentView === 'detail') closePanel(); }
     }
   };
@@ -1632,7 +2025,7 @@ void main(){
   fx.addEventListener('pointercancel', (ev) => { pointers.delete(ev.pointerId); if (pointers.size < 2) pinch = null; drag = null; fx.classList.remove('dragging'); });
   fx.addEventListener('pointerleave', () => { if (!drag) { hover = null; hideTip(); } });
   fx.addEventListener('wheel', (ev) => { ev.preventDefault(); intro = null; lastInteract = performance.now(); view.zoom = clamp(view.zoom * Math.exp(-ev.deltaY * 0.0012), 0.6, 4); }, { passive: false });
-  function resetView() { intro = null; vel.rot = vel.el = 0; view.rot = 0.9; view.el = 0.24; view.zoom = 1.15; }
+  function resetView() { intro = null; vel.rot = vel.el = 0; const v = REGIONS[region].view; view.rot = v.rot; view.el = v.el; view.zoom = v.zoom; }
   fx.addEventListener('dblclick', resetView);
   document.addEventListener('keydown', (ev) => {
     const tg = ev.target; if (tg && (tg.closest('input, textarea, select, [contenteditable]') || ev.metaKey || ev.ctrlKey || ev.altKey)) return;
@@ -1643,6 +2036,8 @@ void main(){
     else if (ev.key === '+' || ev.key === '=') view.zoom = clamp(view.zoom * 1.15, 0.6, 4);
     else if (ev.key === '-' || ev.key === '_') view.zoom = clamp(view.zoom / 1.15, 0.6, 4);
     else if (ev.key === '0') resetView();
+    else if (ev.key === 'm' || ev.key === 'M') travel(region === 'map' ? lastPlace : 'map');
+    else if (/^[1-4]$/.test(ev.key)) travel(PLACES[+ev.key - 1]);
     else used = false;
     if (used) { intro = null; lastInteract = performance.now(); ev.preventDefault(); }
   });
@@ -1692,9 +2087,14 @@ void main(){
     updateEmpty();
   }
   function panelOpen() { return panel.classList.contains('open'); }
-  function select(id) { selected = id; confirmDel = false; openPanel('detail'); }
+  function select(id) {
+    selected = id; confirmDel = false; openPanel('detail');
+    const e = entries.find((x) => x.id === id);
+    if (e && regionOf(e) !== region) travel(regionOf(e));
+  }
 
   $('#btnClose').addEventListener('click', () => { closePanel(); selected = null; });
+  $('#btnMap').addEventListener('click', () => travel(region === 'map' ? lastPlace : 'map'));
   $('#btnJournal').addEventListener('click', () => currentView === 'journal' ? closePanel() : openPanel('journal'));
   $('#btnPatterns').addEventListener('click', () => currentView === 'patterns' ? closePanel() : openPanel('patterns'));
   $('#btnAbout').addEventListener('click', () => currentView === 'about' ? closePanel() : openPanel('about'));
@@ -1702,7 +2102,8 @@ void main(){
   $('#btnEmptyLog').addEventListener('click', () => $('#btnLog').click());
   document.addEventListener('keydown', (ev) => { if (ev.key === 'Escape' && panelOpen()) { closePanel(); selected = null; } });
   $('#panelBody').addEventListener('click', (ev) => {
-    const b = ev.target.closest('[data-goto]'); if (b) { select(b.dataset.goto); }
+    const b = ev.target.closest('[data-goto]'); if (b) { select(b.dataset.goto); return; }
+    const tv = ev.target.closest('[data-travel]'); if (tv) travel(tv.dataset.travel);
   });
 
   // ---------- Form ----------
@@ -1813,7 +2214,7 @@ void main(){
       editingId = null;
       resetForm();
       toast(editing ? `Updated “${label}”.` : `Added “${label}” to the sky.`);
-      selected = id; openPanel('detail');
+      select(id);
     } catch (err) {
       $('#formMsg').textContent = err && err.code === 'quota_exceeded' ? 'The sky is full. Delete a few old entries, then try again.' : 'That entry did not save. Check your connection and try again.';
       btn.textContent = editing ? 'Save changes' : 'Add to the sky';
@@ -1897,7 +2298,8 @@ void main(){
     const w = e.weights || {}; const tot = (+w.body || 0) + (+w.cognition || 0) + (+w.emotion || 0) || 1;
     const v = +e.valence || 0;
     const rel = relations.get(e.id) || [];
-    const tags = [e.example ? '<span class="tag">Example</span>' : '', d?.misfire ? '<span class="tag flare">Misread</span>' : '', d?.regulated ? '<span class="tag reg">Regulated</span>' : ''].join(' ');
+    const rg = REGIONS[regionOf(e)];
+    const tags = [`<button type="button" class="tag place" data-travel="${regionOf(e)}" style="--c:${rgb(rg.color)}">${esc(rg.name)}</button>`, e.example ? '<span class="tag">Example</span>' : '', d?.misfire ? '<span class="tag flare">Misread</span>' : '', d?.regulated ? '<span class="tag reg">Regulated</span>' : ''].join(' ');
     el.innerHTML = `
       <div class="d-head" style="--c:${rgb(d.color)}">
         <span class="d-star" aria-hidden="true"></span>
@@ -1945,7 +2347,8 @@ void main(){
       const day = e.createdAt ? fmtDay.format(e.createdAt) : 'Undated';
       if (day !== lastDay) { html += `<p class="day">${esc(day)}</p>`; lastDay = day; }
       const d = derived.get(e.id);
-      const sub = e.trigger || e.reflection || (e.body || []).join(', ') || '';
+      const sub0 = e.trigger || e.reflection || (e.body || []).join(', ') || '';
+      const sub = REGIONS[regionOf(e)].name + (sub0 ? ' · ' + sub0 : '');
       html += `<button type="button" class="row" data-goto="${esc(e.id)}" style="--c:${rgb(d.color)}"><span class="dot"></span><span class="t"><b>${esc(e.label || 'Unnamed')}</b><small>${esc(sub)}</small></span><span class="r"><span>I ${esc(e.intensity ?? '–')}${e.after != null ? '→' + esc(e.after) : ''}</span>${d.misfire ? '<span class="tag flare">Misread</span>' : e.example ? '<span class="tag">Example</span>' : ''}</span></button>`;
     }
     el.innerHTML = `<p class="lede">${entries.length} ${entries.length === 1 ? 'entry' : 'entries'}. Pick one to find it in the sky.</p>
@@ -1974,6 +2377,8 @@ void main(){
     const lead = Object.entries(sum).sort((a, b) => b[1] - a[1])[0][0];
     let html = `<div><h4>Bead balance</h4><p class="lede" style="margin-bottom:10px">Across ${n} ${n === 1 ? 'entry' : 'entries'}, <b style="color:var(--ink)">${BEAD_NAME[lead]}</b> carried the most signal.</p><div class="bars">
       ${['body', 'cognition', 'emotion'].map((k) => barRow(BEAD_NAME[k], sum[k], tot, Math.round((sum[k] / tot) * 100) + '%', rgb(BEAD[k]))).join('')}</div></div>`;
+    // regions
+    html += `<div class="block"><h4>Where your signals live</h4><p>Each region is one quarter of the circumplex: pleasant or unpleasant, intense or calm.</p><div class="bars">${PLACES.map((k) => { const c = entries.filter((e) => regionOf(e) === k).length; return barRow(REGIONS[k].name, c, n, String(c), rgb(REGIONS[k].color)); }).join('')}</div></div>`;
     // reads
     const read = entries.filter((e) => e.read);
     const mis = entries.filter(isMisfire);
@@ -2070,6 +2475,7 @@ void main(){
   function onEntries() {
     derive();
     updateHud();
+    updateLocation();
     if (selected && !entries.some((e) => e.id === selected)) { selected = null; if (currentView === 'detail') closePanel(); }
     if (currentView === 'journal') renderJournal();
     if (currentView === 'patterns') renderPatterns();
@@ -2084,11 +2490,13 @@ void main(){
   function startReplay() {
     if (!entries.length) return;
     const order = [...entries].sort((a, b) => (a.createdAt || 0) - (b.createdAt || 0));
-    replay = { order, idx: 0, shown: new Set(), t0: performance.now() + 900, step: clamp(16000 / order.length, 420, 1400) };
-    selected = null; closePanel();
-    intro = null; view.zoom = Math.min(view.zoom, 1);
-    $('#replay').hidden = false; $('#replayText').textContent = 'Clearing the sky…';
-    updateEmpty();
+    selected = null; closePanel(); intro = null;
+    const begin = () => {
+      replay = { order, idx: 0, shown: new Set(), t0: performance.now() + 700, step: clamp(16000 / order.length, 420, 1400) };
+      $('#replay').hidden = false; $('#replayText').textContent = 'Clearing the map…';
+      updateEmpty();
+    };
+    if (region === 'map') begin(); else travel('map', begin);
   }
   function stopReplay() { replay = null; $('#replay').hidden = true; updateEmpty(); }
   $('#replayStop').addEventListener('click', stopReplay);
@@ -2250,6 +2658,7 @@ void main(){
     glPending = false; fade = reduceMotion ? 0.6 : 0;
     if (intro) intro.t0 = performance.now();
     $('#loader').classList.add('done'); setTimeout(() => { $('#loader').hidden = true; }, 900);
+    setTimeout(() => { if (region === 'horizon' && !trav) showArrival('horizon'); }, reduceMotion ? 400 : 3200);
   }, 60);
   (async () => {
     try { downloads = window.claude && window.claude.use ? await window.claude.use('downloads') : null; } catch (_) { downloads = null; }

@@ -7,6 +7,7 @@ Every feeling you log becomes a star orbiting a black hole. Its color is its mix
 ## What's inside
 
 - **A real black hole.** Each pixel traces a light ray through the Schwarzschild metric in WebGL2: gravitational lensing, the lensed far side of the accretion disk, the photon ring, Doppler beaming and gravitational redshift. The wide-field bending is softened slightly so the background stays readable.
+- **An explorable universe.** Feelings are placed on Russell's circumplex model of affect (valence × arousal), and each quarter is a different place: **The Horizon** (intense, unpleasant) is a black hole, **Ember Nebula** (intense, pleasant) a stellar nursery, **Tidepool** (calm, pleasant) a quiet sun with a red-dwarf companion, and **The Drift** (calm, unpleasant) a planetary nebula. The **Star map** is a spiral galaxy that plots every entry on the two axes; warp between regions from the map, the markers on the horizon, or keys 1–4 and M.
 - **The seven parameters.** Each log walks through label, bodily signature, trigger, context, history and baseline, failure mode, and regulation.
 - **Patterns.** Bead balance, misread rate, how baseline affects misreads, which regulation strategies lowered intensity, and recurring signatures.
 - **Replay, Capture, Export and Import.**
@@ -28,4 +29,4 @@ It is a static site with no build step. On Cloudflare Pages: framework preset **
 | `favicon.svg` | Tab icon |
 | `_headers` | Cloudflare Pages response headers |
 
-Controls: drag or arrow keys to orbit, scroll, pinch or +/− to zoom, double-click or 0 to reset.
+Controls: drag or arrow keys to orbit, scroll, pinch or +/− to zoom, double-click or 0 to reset, 1–4 to travel to a region, M for the Star map.
