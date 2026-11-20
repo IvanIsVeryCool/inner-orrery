@@ -228,6 +228,9 @@ button.tag { font: inherit; font-size: 11px; line-height: 1; background: none; c
 .about .lede b { color: var(--ink); font-weight: 600; }
 h4 { font-size: 12.5px; font-weight: 600; margin: 0 0 10px; color: var(--ink); letter-spacing: .01em; }
 .muted { color: var(--faint); }
+.mapcap { position: absolute; z-index: 3; left: 50%; transform: translateX(-50%); bottom: calc(env(safe-area-inset-bottom, 0px) + 18px); width: min(50ch, calc(100% - 640px)); text-align: center; margin: 0; font-size: 13px; line-height: 1.55; color: var(--dim); text-shadow: 0 1px 12px #000, 0 0 2px #000; pointer-events: none; }
+#app.panel-open .mapcap { display: none; }
+@media (max-width: 1100px) { .mapcap { display: none; } }
 .jfilters { display: grid; gap: 10px; }
 .jseg { display: flex; flex-wrap: wrap; border: 1px solid var(--line-2); border-radius: var(--r); overflow: hidden; width: fit-content; max-width: 100%; }
 .jseg button { height: 30px; padding: 0 11px; border: 0; background: none; color: var(--dim); font-size: 12.5px; cursor: pointer; }
@@ -629,6 +632,7 @@ dl.params.keys > div { grid-template-columns: 84px 1fr; }
     <p class="w-note">The stars you see now are examples, there to explore. Clear them whenever you like.</p>
     <div class="w-actions"><button class="btn primary" id="wLog" type="button">Log my first feeling</button><button class="btn ghost" id="wLook" type="button">Look around first</button></div>
   </section>
+  <p class="mapcap" id="mapcap" hidden>Each point is one entry, placed by how pleasant it felt (left to right) and how intense (bottom to top). Lines join entries with the same name, oldest to newest. Click a region name to go there.</p>
   <div class="arrive" id="arrive" aria-live="polite"><p class="arrive-k" id="arriveK"></p><h2 id="arriveName"></h2><p class="arrive-b" id="arriveBlurb"></p></div>
   <div class="replay" id="replay" hidden><span class="rp-dot" aria-hidden="true"></span><span id="replayText" aria-live="polite">Replaying</span><button class="linkbtn" id="replayStop" type="button">Stop</button></div>
   <div class="loader" id="loader" aria-hidden="true"><span>Calibrating the horizon</span><i></i></div>
@@ -1910,6 +1914,33 @@ void main(){
       mapHits.push({ id: key, x: align === 'left' ? p.x - 4 : p.x - w + 4, y: p.y - 26, w, h: 50 });
     }
     g.textAlign = 'left'; g.shadowBlur = 0;
+    // same-name trails, oldest to newest
+    const groups = new Map();
+    for (const e of entries) { if (!shown(e.id)) continue; const k = norm(e.label); if (!k) continue; if (!groups.has(k)) groups.set(k, []); groups.get(k).push(e); }
+    const focusLabel = (() => { const f = entries.find((x) => x.id === (hover || selected)); return f ? norm(f.label) : null; })();
+    g.lineCap = 'round'; g.lineJoin = 'round';
+    for (const [k, list] of groups) {
+      if (list.length < 2) continue;
+      list.sort((a, b) => (a.createdAt || 0) - (b.createdAt || 0));
+      const pts = list.map((e) => project(mapPoint(e))).filter(Boolean);
+      if (pts.length < 2) continue;
+      const c = derived.get(list[list.length - 1].id)?.color || [233, 230, 223];
+      const on = focusLabel === k;
+      for (let i = 1; i < pts.length; i++) {
+        const a = pts[i - 1], b2 = pts[i];
+        const t = i / (pts.length - 1);
+        g.strokeStyle = rgb(c, (on ? 0.85 : 0.16 + 0.22 * t));
+        g.lineWidth = on ? 1.6 : 1;
+        const mx = (a.x + b2.x) / 2, my = (a.y + b2.y) / 2, nx = -(b2.y - a.y) * 0.18, ny = (b2.x - a.x) * 0.18;
+        g.beginPath(); g.moveTo(a.x, a.y); g.quadraticCurveTo(mx + nx, my + ny, b2.x, b2.y); g.stroke();
+      }
+      if (on) {
+        const last = pts[pts.length - 1];
+        g.font = '500 11.5px "IBM Plex Sans", system-ui, sans-serif'; g.fillStyle = 'rgba(155,151,143,0.95)';
+        g.shadowColor = 'rgba(0,0,0,0.9)'; g.shadowBlur = 6;
+        g.fillText(`${k} · ${list.length} times`, last.x + 12, last.y + 20); g.shadowBlur = 0;
+      }
+    }
     g.globalCompositeOperation = 'lighter';
     for (const e of entries) {
       if (!shown(e.id)) continue;
@@ -1951,6 +1982,7 @@ void main(){
     const tnow = performance.now();
     for (const id of [...bornAt.keys()]) bornAt.set(id, tnow);
     $('#btnMap').setAttribute('aria-pressed', String(to === 'map'));
+    $('#mapcap').hidden = to !== 'map';
     updateLocation(); showArrival(to); updateEmpty();
   }
   function updateLocation() {
